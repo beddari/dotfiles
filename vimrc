@@ -4,5 +4,7 @@ set shiftwidth=2
 set expandtab
 set backspace=2
 set nocompatible
-syntax on
+syntax enable
+set background=dark
+colorscheme solarized
 
