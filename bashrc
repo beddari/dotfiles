@@ -11,4 +11,4 @@ if [ -f /opt/boxen/homebrew/etc/bash_completion.d/git-prompt.sh ]; then
 fi
 
 export GIT_PS1_SHOWUNTRACKEDFILES=1
-export PS1='\u \w$(__git_ps1)\$ '
+export PS1='\u@\H \w$(__git_ps1)\$ '
