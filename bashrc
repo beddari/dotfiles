@@ -1,3 +1,5 @@
+alias gd="cd $HOME/git"
+
 export LC_CTYPE="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 
@@ -9,6 +11,9 @@ fi
 if [ -f /opt/boxen/homebrew/etc/bash_completion.d/git-prompt.sh ]; then
    source /opt/boxen/homebrew/etc/bash_completion.d/git-prompt.sh
 fi
+if [ -f /usr/share/doc/git/contrib/completion/git-prompt.sh ]; then
+   source /usr/share/doc/git/contrib/completion/git-prompt.sh
+fi 
 
 export GIT_PS1_SHOWUNTRACKEDFILES=1
-export PS1='\u@\H \w$(__git_ps1)\$ '
+export PS1='\u@\H:\w$(__git_ps1)\$ '
