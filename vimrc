@@ -6,5 +6,6 @@ set backspace=2
 set nocompatible
 syntax enable
 set background=dark
+let g:solarized_termtrans=1
 colorscheme solarized
-
+set clipboard=unnamed
