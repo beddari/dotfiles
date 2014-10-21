@@ -7,7 +7,7 @@ export LC_ALL="en_US.UTF-8"
 [ -f /opt/boxen/env.sh ] && source /opt/boxen/env.sh
 
 boxen_gitcompletion=/opt/boxen/homebrew/etc/bash_completion.d/git-completion.bash
-boxen_gitprompt=/opt/boxen/homebrew/etc/bash_completion.d/git-prompt.bash
+boxen_gitprompt=/opt/boxen/homebrew/etc/bash_completion.d/git-prompt.sh
 [ -f $boxen_gitcompletion ] && source $boxen_gitcompletion
 [ -f $boxen_gitprompt ] && source $boxen_gitprompt
 
