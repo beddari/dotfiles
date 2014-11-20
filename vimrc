@@ -9,3 +9,5 @@ set background=dark
 let g:solarized_termtrans=1
 colorscheme solarized
 set clipboard=unnamed
+set list
+set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace

@@ -21,11 +21,6 @@ if [ -f $chruby/chruby.sh ]; then
   source $chruby/auto.sh
 fi
 
-# python virtualenvs
-if [ ! -d "$HOME/virtualenvs" ]; then
-  mkdir -p "$HOME/virtualenvs"
-fi
-export WORKON_HOME=$HOME/virtualenvs
 if [ -f "$HOME/bin/virtualenvwrapper.sh" ]; then
   source "$HOME/bin/virtualenvwrapper.sh"
 fi
