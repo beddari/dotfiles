@@ -1,5 +1,10 @@
 [user]
-	name = Jan Ivar Beddari
-	email = code@beddari.net
+  name = Jan Ivar Beddari
+  email = code@beddari.net
 [push]
-	default = simple
+  default = simple
+[url "git@github.com:norcams/"]
+  insteadOf = norcams:
+[url "git@github.com:beddari/"]
+  insteadOf = beddari:
+
