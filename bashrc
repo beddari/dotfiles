@@ -1,4 +1,6 @@
 alias gd="cd $HOME/git"
+alias ss-osl="sshuttle --remote beddari@osl-admin-1.iaas.uio.no 129.240.0.0/16"
+alias ss-bgo="sshuttle --remote beddari@bgo-admin-1.iaas.uib.no 129.242.0.0/16"
 
 export LC_CTYPE="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
