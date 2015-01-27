@@ -29,4 +29,4 @@ fi
 
 # prompt
 export GIT_PS1_SHOWUNTRACKEDFILES=1
-export PS1='\u@\H:\w$(__git_ps1)\$ '
+export PS1='\u@\h:\w$(__git_ps1)\$ '
