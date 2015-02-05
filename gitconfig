@@ -12,4 +12,6 @@
 [include]
   path = ~/.gitconfig.local
 [github]
- user = beddari
+  user = beddari
+[fetch]
+  prune = true
