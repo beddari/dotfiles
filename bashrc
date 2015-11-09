@@ -16,16 +16,15 @@ export LC_ALL="en_US.UTF-8"
 export HISTSIZE=10000
 export HISTFILESIZE=10000
 
-# Boxen, git stuff
-[ -f /opt/boxen/env.sh ] && source /opt/boxen/env.sh
 
-boxen_gitcompletion=/opt/boxen/homebrew/etc/bash_completion.d/git-completion.bash
-boxen_gitprompt=/opt/boxen/homebrew/etc/bash_completion.d/git-prompt.sh
-[ -f $boxen_gitcompletion ] && source $boxen_gitcompletion
-[ -f $boxen_gitprompt ] && source $boxen_gitprompt
+git_osx=/usr/local/etc/bash_completion.d
+if [ -d $git_osx ]; then
+  source /usr/local/etc/bash_completion.d/git-completion.bash
+  source /usr/local/etc/bash_completion.d/git-prompt.sh
+fi
 
-linux_gitprompt=/usr/share/doc/git/contrib/completion/git-prompt.sh
-[ -f $linux_gitprompt ] && source $linux_gitprompt
+git_linux=/usr/share/doc/git/contrib/completion/git-prompt.sh
+[ -f $git_linux ] && source $git_linux
 
 # chruby
 chruby=/usr/local/share/chruby
