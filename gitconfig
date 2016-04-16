@@ -3,6 +3,8 @@
   email = code@beddari.net
 [push]
   default = simple
+[url "git@github.com:ipnett/"]
+  insteadOf = ipnett:
 [url "git@github.com:norcams/"]
   insteadOf = norcams:
 [url "git@github.com:beddari/"]

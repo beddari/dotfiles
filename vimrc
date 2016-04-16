@@ -3,6 +3,10 @@ set tabstop=2
 set shiftwidth=2
 set expandtab
 set backspace=2
+set backupcopy=yes
+set nobackup               " do not keep backups after close
+set nowritebackup          " do not keep a backup while working
+set noswapfile             " don't keep swp files either
 set nocompatible
 syntax enable
 set background=dark
