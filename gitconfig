@@ -1,12 +1,9 @@
 [user]
   name = Jan Ivar Beddari
   email = code@beddari.net
-[push]
-  default = simple
+  signingkey = F5B5AD104B05E30F
 [url "git@github.com:ipnett/"]
   insteadOf = ipnett:
-[url "git@github.com:norcams/"]
-  insteadOf = norcams:
 [url "git@github.com:beddari/"]
   insteadOf = beddari:
 [url "git@github.com:"]
@@ -19,3 +16,9 @@
   user = beddari
 [fetch]
   prune = true
+[gpg]
+  program = gpg2
+[pull]
+  rebase = true
+[commit]
+  verbose = true
