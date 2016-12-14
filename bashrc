@@ -18,6 +18,9 @@ export HISTFILESIZE=10000
 
 export GOPATH=$HOME/src/golang
 
+export VISUAL=vim
+export EDITOR="$VISUAL"
+
 git_osx=/usr/local/etc/bash_completion.d
 if [[ -d $git_osx ]]; then
   source /usr/local/etc/bash_completion.d/git-completion.bash
@@ -27,16 +30,15 @@ fi
 linux_gitprompt=/usr/share/doc/git-core-doc/contrib/completion/git-prompt.sh
 [[ -f $linux_gitprompt ]] && source $linux_gitprompt
 
-# chruby
+# source chruby if it is present
 chruby=/usr/local/share/chruby
-if [[ -f $chruby/chruby.sh ]]; then
-  source $chruby/chruby.sh
-  source $chruby/auto.sh
-fi
+[[ -f $chruby/chruby.sh ]] && { source $chruby/chruby.sh; source $chruby/auto.sh; }
 
-if [[ -f "$HOME/bin/virtualenvwrapper.sh" ]]; then
-  source "$HOME/bin/virtualenvwrapper.sh"
-fi
+# source local virtualenvwrapper, if present
+[[ -f "$HOME/bin/virtualenvwrapper.sh" ]] && source "$HOME/bin/virtualenvwrapper.sh"
+
+# use hashicorp packer binary
+[[ -f "$HOME/bin/packer" ]] && alias packer="~/bin/packer"
 
 # prompt
 export GIT_PS1_SHOWUNTRACKEDFILES=1
