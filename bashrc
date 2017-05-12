@@ -8,7 +8,8 @@ if [[ $(command -v gpg2) ]]; then
   alias gpg="gpg2"
 fi
 
-alias gd="cd $HOME/git"
+alias lsvirtualenv="lsvirtualenv -b"
+alias work="cd $HOME/work"
 eval "$(hub alias -s)"
 
 export LC_CTYPE="en_US.UTF-8"
@@ -48,3 +49,7 @@ export PS1='\u@\h:\w$(__git_ps1)\$ '
 if [[ $(command -v keychain) ]]; then
   eval $(keychain --eval -q)
 fi
+
+# safespring pass
+alias tpass="PASSWORD_STORE_DIR=$HOME/.pass-team/ pass"
+
