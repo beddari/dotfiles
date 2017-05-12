@@ -2,10 +2,10 @@
   name = Jan Ivar Beddari
   email = code@beddari.net
   signingkey = F5B5AD104B05E30F
-[url "git@github.com:ipnett/"]
-  insteadOf = ipnett:
+[url "git@github.com:safespring/"]
+  insteadOf = safespring/
 [url "git@github.com:beddari/"]
-  insteadOf = beddari:
+  insteadOf = beddari/
 [url "git@github.com:"]
   insteadOf = gh:
 [alias]
@@ -22,3 +22,5 @@
   rebase = true
 [commit]
   verbose = true
+[help]
+	autocorrect = 1
