@@ -22,13 +22,17 @@ export GOPATH=$HOME/src/golang
 export VISUAL=vim
 export EDITOR="$VISUAL"
 
+# Set correct libvirt virsh connect URI (which isn't the default)
+# http://wiki.libvirt.org/page/FAQ#What_is_the_difference_between_qemu:.2F.2F.2Fsystem_and_qemu:.2F.2F.2Fsession.3F_Which_one_should_I_use.3F
+export LIBVIRT_DEFAULT_URI="qemu:///system"
+
 git_osx=/usr/local/etc/bash_completion.d
 if [[ -d $git_osx ]]; then
   source /usr/local/etc/bash_completion.d/git-completion.bash
   source /usr/local/etc/bash_completion.d/git-prompt.sh
 fi
 
-linux_gitprompt=/usr/share/doc/git-core-doc/contrib/completion/git-prompt.sh
+linux_gitprompt=/usr/share/doc/git/contrib/completion/git-prompt.sh
 [[ -f $linux_gitprompt ]] && source $linux_gitprompt
 
 # source chruby if it is present
@@ -50,6 +54,24 @@ if [[ $(command -v keychain) ]]; then
   eval $(keychain --eval -q)
 fi
 
-# safespring pass
+# team password store
 alias tpass="PASSWORD_STORE_DIR=$HOME/.pass-team/ pass"
+# team openstack credentials
+osadmin() {
+  workon oscli
+  source <(tpass show "openstack/$1/admin")
+}
+osuser() {
+  workon oscli
+  source <(tpass show "$(whoami)/openstack/$1")
+}
+osproject() {
+  export OS_PROJECT_NAME="$1"
+  export OS_PROJECT_DOMAIN_NAME="${1#*.}"
+  openstack token issue >/dev/null && {
+    echo "Authenticated successfully."
+  } || {
+    echo "Authentication failed."
+  }
+}
 
