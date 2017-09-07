@@ -56,14 +56,15 @@ fi
 
 # team password store
 alias tpass="PASSWORD_STORE_DIR=$HOME/.pass-team/ pass"
+
 # team openstack credentials
-osadmin() {
-  workon oscli
-  source <(tpass show "openstack/$1/admin")
-}
 osuser() {
-  workon oscli
-  source <(tpass show "$(whoami)/openstack/$1")
+  VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/$USER@safespring.com")
+}
+osoperator() {
+  VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/$USER-operator")
 }
 osproject() {
   export OS_PROJECT_NAME="$1"
@@ -73,5 +74,24 @@ osproject() {
   } || {
     echo "Authentication failed."
   }
+}
+osadmin() {
+  VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "openstack/$1/admin")
+  echo "WARNING: THIS ACCOUNT HAS SUPER COW POWERS, DO NOT USE UNLESS NEEDED!"
+}
+oslogout() {
+  unset OS_AUTH_URL OS_IDENTITY_API_VERSION OS_PASSWORD \
+        OS_PROJECT_DOMAIN_NAME OS_PROJECT_NAME OS_REGION_NAME \
+        OS_USERNAME OS_USER_DOMAIN_NAME
+  deactivate
+}
+osprompt() {
+  export PS1__OS_SAVE="${PS1__OS_SAVE:-$PS1}"
+  [[ -n $OS_REGION_NAME || -n $OS_USERNAME || -n $OS_PROJECT_NAME ]] && {
+    [[ $OS_USERNAME == "admin" ]] && attrib="\e[31m" || \
+    [[ $OS_USERNAME =~ .*@operator$ ]] && attrib="\e[32m" || attrib=""
+    PS1="($OS_REGION_NAME/\[$attrib\]$OS_USERNAME\[\e[m\]/$OS_PROJECT_NAME) $PS1__OS_SAVE"
+  } || PS1=$PS1__OS_SAVE
 }
 

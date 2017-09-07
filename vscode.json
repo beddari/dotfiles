@@ -20,5 +20,6 @@
     },
     "markdown.preview.fontSize": 16,
     "terminal.integrated.fontSize": 15,
-    "terminal.integrated.lineHeight": 1.36, 
+    "terminal.integrated.lineHeight": 1.36,
+    "window.zoomLevel": 0, 
 }
