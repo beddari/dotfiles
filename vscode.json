@@ -1,0 +1,24 @@
+{
+    "workbench.activityBar.visible": false,
+    "workbench.colorTheme": "Solarized Dark",
+    "extensions.ignoreRecommendations": true,
+    "telemetry.enableCrashReporter": true,
+    "telemetry.enableTelemetry": false,
+    "editor.fontFamily": "Inconsolata",
+    "editor.fontWeight": "normal",
+    "editor.fontSize": 16,
+    "editor.lineHeight": 19,
+    "[markdown]": {
+        "editor.minimap.enabled": false,
+        "editor.rulers": [80],
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 81,
+        "editor.renderWhitespace": "boundary"
+    },
+    "markdown.preview.fontSize": 16,
+    "terminal.integrated.fontSize": 15,
+    "terminal.integrated.lineHeight": 1.36, 
+}
