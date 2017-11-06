@@ -60,11 +60,11 @@ alias tpass="PASSWORD_STORE_DIR=$HOME/.pass-team/ pass"
 # team openstack credentials
 osuser() {
   VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
-  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/$USER@safespring.com")
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/user")
 }
 osoperator() {
   VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
-  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/$USER-operator")
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/operator")
 }
 osproject() {
   export OS_PROJECT_NAME="$1"
