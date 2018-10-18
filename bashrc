@@ -45,6 +45,9 @@ chruby=/usr/local/share/chruby
 # use hashicorp packer binary
 [[ -f "$HOME/bin/packer" ]] && alias packer="~/bin/packer"
 
+# travis cli
+[[ -f "$HOME/.travis/travis.sh" ]] && source "$HOME/.travis/travis.sh"
+
 # prompt
 export GIT_PS1_SHOWUNTRACKEDFILES=1
 export PS1='\u@\h:\w$(__git_ps1)\$ '
