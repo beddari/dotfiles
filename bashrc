@@ -42,9 +42,6 @@ chruby=/usr/local/share/chruby
 # source local virtualenvwrapper, if present
 [[ -f "$HOME/bin/virtualenvwrapper.sh" ]] && source "$HOME/bin/virtualenvwrapper.sh"
 
-# use hashicorp packer binary
-[[ -f "$HOME/bin/packer" ]] && alias packer="~/bin/packer"
-
 # travis cli
 [[ -f "$HOME/.travis/travis.sh" ]] && source "$HOME/.travis/travis.sh"
 
@@ -63,11 +60,11 @@ alias tpass="PASSWORD_STORE_DIR=$HOME/.pass-team/ pass"
 # team openstack credentials
 osuser() {
   VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
-  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/user")
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "home/$USER/$1/user")
 }
 osoperator() {
   VIRTUAL_ENV_DISABLE_PROMPT=1 workon oscli
-  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "$USER/$1/operator")
+  source <(PASSWORD_STORE_DIR=$HOME/.pass-team/ pass show "home/$USER/$1/operator")
 }
 osproject() {
   export OS_PROJECT_NAME="$1"
@@ -97,4 +94,10 @@ osprompt() {
     PS1="($OS_REGION_NAME/\[$attrib\]$OS_USERNAME\[\e[m\]/$OS_PROJECT_NAME) $PS1__OS_SAVE"
   } || PS1=$PS1__OS_SAVE
 }
+
+# ansible
+export ANSIBLE_DIR=$HOME/work/ansible
+export ANSIBLE_ROLES_PATH=$ANSIBLE_DIR/roles:$ANSIBLE_DIR/vendor/roles
+export ANSIBLE_FILTER_PLUGINS=~/work/ansible/filter_plugins
+export ANSIBLE_TEST_PLUGINS=~/work/ansible/test_plugins
 

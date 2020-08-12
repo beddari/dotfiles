@@ -22,5 +22,6 @@
   rebase = true
 [commit]
   verbose = true
+# gpgsign = true
 [help]
-	autocorrect = 1
+  autocorrect = 1
