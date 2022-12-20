@@ -35,15 +35,12 @@ fi
 linux_gitprompt=/usr/share/doc/git/contrib/completion/git-prompt.sh
 [[ -f $linux_gitprompt ]] && source $linux_gitprompt
 
-# source chruby if it is present
-chruby=/usr/local/share/chruby
-[[ -f $chruby/chruby.sh ]] && { source $chruby/chruby.sh; source $chruby/auto.sh; }
-
-# source local virtualenvwrapper, if present
-[[ -f "$HOME/bin/virtualenvwrapper.sh" ]] && source "$HOME/bin/virtualenvwrapper.sh"
-
-# travis cli
-[[ -f "$HOME/.travis/travis.sh" ]] && source "$HOME/.travis/travis.sh"
+# source usr local virtualenvwrapper, if present
+[[ -f "/usr/local/bin/virtualenvwrapper.sh" ]] && {
+  export WORKON_HOME=~/.virtualenvs
+  export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3
+  source "/usr/local/bin/virtualenvwrapper.sh"
+}
 
 # prompt
 export GIT_PS1_SHOWUNTRACKEDFILES=1
