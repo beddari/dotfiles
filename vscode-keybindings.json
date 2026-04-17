@@ -1,8 +1,3 @@
-[
-  {
-    "key": "ctrl+a",
-    "command": "workbench.action.terminal.sendSequence",
-    "args": { "text": "\u0001" },
-    "when": "terminalFocus"
-  }
-]
+// Place your key bindings in this file to overwrite the defaults
+[]
+
