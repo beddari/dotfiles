@@ -1,0 +1,28 @@
+{
+	"name": "darkerized-better-solarized-dark-theme",
+	"displayName": "Darkerized Better Solarized",
+	"description": "A Darkerized Better Solarized theme for Visual Studio Code include light and dark versions",
+	"version": "0.10.11",
+	"publisher": "joelsantos",
+	"engines": {
+		"vscode": "^1.13.0"
+	},
+	"categories": [
+		"Themes"
+	],
+	"contributes": {
+		"themes": [
+			{
+				"label": "Darkerized Better Selenized Dark",
+				"uiTheme": "vs-dark",
+				"path": "./themes/better-selenized-dark.json"
+			},
+			{
+				"label": "Darkerized Better Selenized Light",
+				"uiTheme": "vs",
+				"path": "./themes/better-selenized-light.json"
+			}
+		]
+	},
+	"license": "See license in LICENSE.txt"
+}

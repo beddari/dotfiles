@@ -1,0 +1,24 @@
+{
+  "name": "solarized-osaka",
+  "displayName": "Solarized Osaka",
+  "description": "Dark and light themes matching the Ghostty solarized-osaka terminal themes",
+  "version": "0.2.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Themes"],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Solarized Osaka Night",
+        "uiTheme": "vs-dark",
+        "path": "./themes/solarized-osaka-night-color-theme.json"
+      },
+      {
+        "label": "Solarized Osaka Day",
+        "uiTheme": "vs",
+        "path": "./themes/solarized-osaka-day-color-theme.json"
+      }
+    ]
+  }
+}

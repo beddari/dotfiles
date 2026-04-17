@@ -1,0 +1,14 @@
+[delta]
+        dark = true
+        syntax-theme = ansi
+        minus-style = syntax "#37222c"
+        minus-emph-style = syntax "#713137"
+        plus-style = syntax "#20303b"
+        plus-emph-style = syntax "#2c5a3f"
+        line-numbers-minus-style = "#f7768e"
+        line-numbers-plus-style = "#9ece6a"
+        line-numbers-zero-style = "#414868"
+        hunk-header-decoration-style = "#414868" box
+        hunk-header-style = file line-number syntax
+        file-style = "#7aa2f7" bold
+        file-decoration-style = "#7aa2f7" ul
