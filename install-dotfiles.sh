@@ -23,6 +23,11 @@ done
 # git
 ln "$DOTFILES/gitconfig.local" ~/.gitconfig.local
 
+# ssh
+mkdir -p ~/.ssh/hosts
+chmod 700 ~/.ssh ~/.ssh/hosts
+ln "$DOTFILES/ssh_config" ~/.ssh/config
+
 # ghostty
 mkdir -p ~/.config
 ln "$DOTFILES/ghostty" ~/.config/ghostty

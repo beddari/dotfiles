@@ -9,7 +9,7 @@
     <array>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>rm -f /Users/beddari/.ssh/agent.sock; exec /opt/homebrew/bin/ssh-agent -D -a /Users/beddari/.ssh/agent.sock</string>
+        <string>rm -f "$HOME/.ssh/agent.sock"; exec /opt/homebrew/bin/ssh-agent -D -a "$HOME/.ssh/agent.sock"</string>
     </array>
 
     <key>RunAtLoad</key>
