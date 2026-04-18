@@ -19,9 +19,9 @@ format = "[$branch]($style) "
 style = "purple"
 
 [git_status]
-format = '([$ahead_behind$all_status]($style) )'
+format = '([$ahead_behind]($style) )([$all_status]($style) )'
 style = "yellow"
-ahead = "▲ "
+ahead = "▲"
 
 [env_var.ZMX_SESSION]
 format = "[$env_value] "
