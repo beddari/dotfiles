@@ -60,4 +60,10 @@ if [ "$(uname)" = "Darwin" ]; then
   defaults write com.apple.WindowManager EnableTiledWindowMargins -bool false
   defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+
+  # ssh-agent launchd service
+  PLIST="$HOME/Library/LaunchAgents/com.brew.ssh-agent.plist"
+  cp -f "$DOTFILES/com.brew.ssh-agent.plist" "$PLIST"
+  launchctl unload "$PLIST" 2>/dev/null || true
+  launchctl load "$PLIST"
 fi
