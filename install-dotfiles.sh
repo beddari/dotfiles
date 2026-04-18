@@ -24,8 +24,8 @@ done
 ln "$DOTFILES/gitconfig.local" ~/.gitconfig.local
 
 # ssh
-mkdir -p ~/.ssh/hosts
-chmod 700 ~/.ssh ~/.ssh/hosts
+mkdir -p ~/.ssh/hosts ~/.ssh/control
+chmod 700 ~/.ssh ~/.ssh/hosts ~/.ssh/control
 ln "$DOTFILES/ssh_config" ~/.ssh/config
 
 # ghostty

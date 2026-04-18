@@ -20,8 +20,21 @@ HISTFILE=~/.histfile
 HISTSIZE=10000
 SAVEHIST=10000
 
+# Cursor shape: blinking bar
+echo -ne '\e[5 q'
+
 # Prompt
 eval "$(starship init zsh)"
+
+# Window title
+function _set_window_title() {
+    if [[ -n "$SSH_CONNECTION" ]]; then
+        print -Pn "\e]0;ssh → ${USER}@${HOST%%.*}: ${PWD/#$HOME/~}\a"
+    else
+        print -Pn "\e]0;${PWD/#$HOME/~}\a"
+    fi
+}
+precmd_functions+=(_set_window_title)
 
 # Dircolors
 if [[ -f ~/.dircolors ]]; then
