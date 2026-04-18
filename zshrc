@@ -1,9 +1,11 @@
 # Homebrew
 if [[ "$(uname)" == "Darwin" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
     export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
     export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-elif [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+    # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
+    bindkey -s '\xc2\xa0' ' '
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
@@ -12,7 +14,6 @@ export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 # Environment
 export EDITOR=vim
 export LESS='-FRXx4'
-export NODE_OPTIONS="--no-deprecation"
 
 # History
 HISTFILE=~/.histfile
@@ -34,7 +35,7 @@ if [[ -f ~/.dircolors ]]; then
 fi
 
 # Completions
-if type brew &>/dev/null; then
+if command -v brew &>/dev/null; then
     fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
 fi
 autoload -Uz compinit
