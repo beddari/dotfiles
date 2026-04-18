@@ -3,63 +3,8 @@ set -e
 
 DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 
-ln() { command ln -sfn "$@"; }
-
-# zsh
-ln "$DOTFILES/zshrc" ~/.zshrc
-
-# bash
-ln "$DOTFILES/bashrc" ~/.bashrc
-
-# vim
-rm -rf ~/.vim/colors
-mkdir -p ~/.vim/colors
-ln "$DOTFILES/vimrc" ~/.vimrc
-for f in "$DOTFILES"/vim-*.vim; do
-  name="${f##*/}"
-  ln "$f" ~/.vim/colors/"${name#vim-}"
-done
-
-# git
-ln "$DOTFILES/gitconfig.local" ~/.gitconfig.local
-
-# ghostty
-mkdir -p ~/.config
-ln "$DOTFILES/ghostty" ~/.config/ghostty
-
-# starship
-ln "$DOTFILES/starship.toml" ~/.config/starship.toml
-
-# vscode
-if [ "$(uname)" = "Darwin" ]; then
-  VSCODE_DIR="$HOME/Library/Application Support/Code/User"
-else
-  VSCODE_DIR="$HOME/.config/Code/User"
-fi
-mkdir -p "$VSCODE_DIR"
-ln "$DOTFILES/vscode-keybindings.json" "$VSCODE_DIR/keybindings.json"
-
-VSCODE_EXT="$HOME/.vscode/extensions"
-mkdir -p "$VSCODE_EXT"
-ln "$DOTFILES/vscode-solarized-osaka-night" "$VSCODE_EXT/solarized-osaka-night"
-ln "$DOTFILES/vscode-darkerized-better-solarized" "$VSCODE_EXT/darkerized-better-solarized"
-
-# theme scripts
-mkdir -p ~/.local/bin
-for cmd in theme-dark-solarized-osaka.sh theme-light-solarized-osaka.sh theme-dark-selenized.sh theme-light-selenized.sh; do
-  ln "$DOTFILES/$cmd" ~/.local/bin/"$cmd"
-done
-
-# set default theme if none active
-if [ ! -e "$HOME/.config/delta-theme.gitconfig" ]; then
-  "$DOTFILES/theme-dark-solarized-osaka.sh"
-fi
-
-# macOS defaults
-if [ "$(uname)" = "Darwin" ]; then
-  defaults write com.apple.WindowManager EnableTiledWindowMargins -bool false
-  defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
-  defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
-fi
+sh "$DOTFILES/install-brew.sh"
+sh "$DOTFILES/install-dotfiles.sh"
 
 echo "Done."
+
