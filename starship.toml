@@ -1,4 +1,6 @@
-format = """$env_var$hostname$directory$git_branch$git_status$character"""
+format = """
+${env_var.ZMX_SESSION}\
+$hostname$directory$git_branch$git_status$character"""
 add_newline = false
 
 [character]
@@ -24,5 +26,7 @@ style = "yellow"
 ahead = "▲"
 
 [env_var.ZMX_SESSION]
-format = "[$env_value] "
-style = ""
+symbol = " "
+format = "[$symbol$env_value]($style) "
+description = "zmx session name"
+style = "bold magenta"
