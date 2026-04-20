@@ -47,11 +47,13 @@ if [[ -f ~/.dircolors ]]; then
     fi
 fi
 
-# Brew upgrade wrapper: formulae + vscode extensions
-brew-up() {
-    brew update && brew upgrade "$@"
-    local bf="$HOME/kode/dotfiles/Brewfile.$(uname)"
-    [[ -f "$bf" ]] && brew bundle --file="$bf" --vscode --go
+# Brew wrapper: auto-sync vscode/go extensions from Brewfile after upgrade
+brew() {
+    command brew "$@"
+    if [[ "$1" == "upgrade" ]]; then
+        local bf="$HOME/kode/dotfiles/Brewfile.$(uname)"
+        [[ -f "$bf" ]] && command brew bundle --file="$bf" --vscode --go
+    fi
 }
 
 # Completions
