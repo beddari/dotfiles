@@ -43,6 +43,13 @@ else
 fi
 mkdir -p "$VSCODE_DIR"
 ln "$DOTFILES/vscode-keybindings.json" "$VSCODE_DIR/keybindings.json"
+if [ -f "$VSCODE_DIR/settings.json" ]; then
+  # merge: dotfiles baseline wins, local-only keys preserved
+  jq -s '.[0] * .[1]' "$VSCODE_DIR/settings.json" "$DOTFILES/vscode-settings.json" > "$VSCODE_DIR/settings.json.tmp"
+  mv "$VSCODE_DIR/settings.json.tmp" "$VSCODE_DIR/settings.json"
+else
+  cp "$DOTFILES/vscode-settings.json" "$VSCODE_DIR/settings.json"
+fi
 
 VSCODE_EXT="$HOME/.vscode/extensions"
 mkdir -p "$VSCODE_EXT"
