@@ -35,6 +35,13 @@ if [[ -f ~/.dircolors ]]; then
     fi
 fi
 
+# Brew upgrade wrapper: formulae + vscode extensions
+brew-up() {
+    brew update && brew upgrade "$@"
+    local bf="$HOME/kode/dotfiles/Brewfile.$(uname)"
+    [[ -f "$bf" ]] && brew bundle --file="$bf" --vscode --go
+}
+
 # Completions
 if type brew &>/dev/null; then
     BREW_PREFIX="$(brew --prefix)"
