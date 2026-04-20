@@ -10,6 +10,8 @@
     "window.customTitleBarVisibility": "auto",
 
     "workbench.activityBar.location": "bottom",
+    "workbench.enableExperiments": false,
+    "workbench.settings.enableNaturalLanguageSearch": false,
     "workbench.startupEditor": "none",
     "workbench.welcomePage.walkthroughs.openOnInstall": false,
 
@@ -19,7 +21,10 @@
     "update.mode": "manual",
     "update.showReleaseNotes": false,
     "update.statusBar": "hidden",
+    "extensions.autoCheckUpdates": false,
+    "extensions.autoUpdate": false,
     "extensions.ignoreRecommendations": true,
+    "npm.fetchOnlinePackageInfo": false,
 
     "[markdown]": {
         "editor.wordWrap": "wordWrapColumn",
