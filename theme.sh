@@ -16,7 +16,10 @@ mkdir -p "$HOME/.config"
 ln -sfn "$DOTFILES/delta-$THEME.gitconfig" "$HOME/.config/delta-theme.gitconfig"
 
 # 2. Ghostty config and reload
-echo "theme = $GHOSTTY_THEME" > "$DOTFILES/ghostty/config"
+GHOSTTY_LOCAL="$HOME/.config/ghostty/config.local"
+mkdir -p "$HOME/.config/ghostty" && touch "$GHOSTTY_LOCAL"
+grep -q '^theme = ' "$GHOSTTY_LOCAL" || echo "theme = $GHOSTTY_THEME" >> "$GHOSTTY_LOCAL"
+sed -i '' "s/^theme = .*/theme = $GHOSTTY_THEME/" "$GHOSTTY_LOCAL"
 killall -USR2 ghostty 2>/dev/null || true
 
 # 3. Dircolors
