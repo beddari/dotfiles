@@ -1,1 +1,2 @@
+config-file = ?~/.config/ghostty/theme.local
 config-file = ?~/.config/ghostty/config.local
