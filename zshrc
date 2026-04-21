@@ -67,3 +67,9 @@ compinit
 if command -v zmx &>/dev/null; then
     eval "$(zmx completions zsh)"
 fi
+
+# Install local TERM terminfo on a remote host
+function terminfo-install() {
+    infocmp "$TERM" | ssh "$@" -- tic -x -
+}
+compdef terminfo-install=ssh
