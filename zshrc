@@ -17,8 +17,64 @@ export LESS='-FRXx4'
 
 # History
 HISTFILE=~/.histfile
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=200000
+SAVEHIST=200000
+HISTORY_RETENTION_DAYS=21
+HISTORY_PRUNE_INTERVAL_SECONDS=86400
+
+# Keep rich, shared history and ensure Ctrl-R works across keymaps.
+setopt APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+bindkey '^R' history-incremental-search-backward
+bindkey -M viins '^R' history-incremental-search-backward
+
+# Keep only recent timestamped history entries in HISTFILE.
+_prune_history_file() {
+    [[ -s "$HISTFILE" ]] || return 0
+
+    local prune_state_file="${HISTFILE}.prune-state"
+    local lock_file="${HISTFILE}.prune-lock"
+    local last_prune=0
+    local cutoff
+    local tmp_file="${HISTFILE}.tmp.$$"
+
+    if [[ -r "$prune_state_file" ]]; then
+        read -r last_prune < "$prune_state_file"
+        [[ "$last_prune" == <-> ]] || last_prune=0
+    fi
+
+    (( EPOCHSECONDS - last_prune >= HISTORY_PRUNE_INTERVAL_SECONDS )) || return 0
+
+    # Non-blocking lock: skip prune if another shell is already pruning.
+    if ! ( set -o noclobber; : > "$lock_file" ) 2>/dev/null; then
+        return 0
+    fi
+
+    cutoff=$(( EPOCHSECONDS - HISTORY_RETENTION_DAYS * 86400 ))
+
+    if awk -v cutoff="$cutoff" '
+        /^: [0-9]+:[0-9]+;/ {
+            if (match($0, /^: ([0-9]+):[0-9]+;/, m) && m[1] >= cutoff) {
+                print
+            }
+            next
+        }
+        { print }
+    ' "$HISTFILE" > "$tmp_file"; then
+        mv "$tmp_file" "$HISTFILE"
+        print -r -- "$EPOCHSECONDS" > "$prune_state_file"
+    else
+        rm -f "$tmp_file"
+    fi
+
+    rm -f "$lock_file"
+}
+_prune_history_file
 
 # Cursor shape: blinking bar
 echo -ne '\e[5 q'
