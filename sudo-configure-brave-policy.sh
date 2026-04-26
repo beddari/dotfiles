@@ -119,10 +119,8 @@ PYEOF
     sudo -u "${SUDO_USER:-$(logname)}" open "$SAVED"
     sleep 1
     sudo -u "${SUDO_USER:-$(logname)}" open "x-apple.systempreferences:com.apple.preferences.configurationprofiles"
-    sleep 2
-    rm -f "$SAVED"
     echo ""
-    echo "Click 'Install' in the Profiles pane to complete installation."
+    echo "After installing, run: rm -f '${SAVED}'"
     echo "Restart Brave and verify at brave://policy"
   fi
 fi
