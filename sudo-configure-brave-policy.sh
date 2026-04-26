@@ -43,25 +43,19 @@ if [ "$OS" = "Linux" ]; then
 
 elif [ "$OS" = "Darwin" ]; then
   PROFILE_ID="com.brave.Browser.policy"
-  MOBILECONFIG="${SCRIPT_DIR}/brave-policy.mobileconfig"
-  UPDATE_URL="http://127.0.0.1:8765/brave-policy.mobileconfig"
+  TMPCONFIG="$(mktemp /tmp/brave-policy-XXXXXX)"
+  mv "$TMPCONFIG" "${TMPCONFIG}.mobileconfig"
+  TMPCONFIG="${TMPCONFIG}.mobileconfig"
 
-  # Generate the mobileconfig from brave-policy.json.
-  # PayloadVersion is derived from the JSON content hash: stable, content-addressed,
-  # and changes whenever brave-policy.json changes.
-  # macOS polls PayloadUpdateURL and prompts the user when the version increases.
-  # The file is kept in place so the local policy server can serve it for auto-updates.
-  python3 - "$POLICY_JSON" "$MOBILECONFIG" "$UPDATE_URL" <<'PYEOF'
-import sys, json, plistlib, hashlib
+  # Generate the mobileconfig plist from brave-policy.json using Python 3.
+  # Fixed UUIDs keep the profile identity stable across re-installs.
+  python3 - "$POLICY_JSON" "$TMPCONFIG" <<'PYEOF'
+import sys, json, plistlib
 
-policy_json_path, output_path, update_url = sys.argv[1], sys.argv[2], sys.argv[3]
+policy_json_path, output_path = sys.argv[1], sys.argv[2]
 
 with open(policy_json_path) as f:
-    raw = f.read()
-
-policies = json.loads(raw)
-canonical = json.dumps(json.loads(raw), sort_keys=True).encode()
-version = int(hashlib.sha256(canonical).hexdigest()[:7], 16)
+    policies = json.load(f)
 
 profile = {
     "PayloadContent": [{
@@ -81,15 +75,13 @@ profile = {
     "PayloadRemovalDisallowed": False,
     "PayloadScope": "System",
     "PayloadType": "Configuration",
-    "PayloadUpdateURL": update_url,
     "PayloadUUID": "3D5A8C21-F4B2-4E9A-BC3D-7F1E2A4B6C8D",
-    "PayloadVersion": version,
+    "PayloadVersion": 1,
 }
 
 with open(output_path, "wb") as f:
     plistlib.dump(profile, f, fmt=plistlib.FMT_XML)
 PYEOF
-  chmod 644 "$MOBILECONFIG"
 
   # Remove old bare plist left by previous installs
   OLD_PLIST="/Library/Managed Preferences/com.brave.Browser.plist"
@@ -107,21 +99,30 @@ PYEOF
   echo "Installing configuration profile..."
   # macOS 15 Sequoia removed 'profiles install' from the command line.
   # Opening the mobileconfig file triggers System Settings to prompt for installation.
-  if profiles install -path "$MOBILECONFIG" 2>/dev/null; then
+  # Detect which method is available and use it.
+  if profiles install -path "$TMPCONFIG" 2>/dev/null; then
+    rm -f "$TMPCONFIG"
     killall cfprefsd 2>/dev/null || true
     echo ""
     echo "Brave policy profile installed (identifier: ${PROFILE_ID})"
     echo "Restart Brave and verify at brave://policy"
-    echo "To remove: sudo profiles remove -identifier ${PROFILE_ID}"
+    echo "To remove: sudo profiles remove -identifier ${PROFILE_ID} (requires root)"
   else
     # macOS 15+: open the file so System Settings handles installation
+    SAVED="${SCRIPT_DIR}/brave-policy-pending.mobileconfig"
+    cp "$TMPCONFIG" "$SAVED"
+    chmod 644 "$SAVED"
+    rm -f "$TMPCONFIG"
     echo ""
     echo "Opening System Settings to the Profiles pane..."
-    echo "Click 'Install' to complete installation."
-    sudo -u "${SUDO_USER:-$(logname)}" open "$MOBILECONFIG"
+    echo "Double-click 'Brave Browser Policy' to install it."
+    sudo -u "${SUDO_USER:-$(logname)}" open "$SAVED"
     sleep 1
     sudo -u "${SUDO_USER:-$(logname)}" open "x-apple.systempreferences:com.apple.preferences.configurationprofiles"
+    sleep 2
+    rm -f "$SAVED"
     echo ""
+    echo "Click 'Install' in the Profiles pane to complete installation."
     echo "Restart Brave and verify at brave://policy"
   fi
 fi
