@@ -2,7 +2,12 @@
 # Configure a red warning prompt for the root shell on macOS and Linux.
 # Sets a red PS1 and a dark red terminal background (via OSC 11) so it's
 # immediately obvious when running as root.
-set -e
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Run as root: sudo $0"
+  exit 1
+fi
 
 OS="$(uname)"
 
@@ -15,7 +20,7 @@ else
   exit 1
 fi
 
-sudo tee "$ROOT_PROFILE" > /dev/null <<'EOF'
+tee "$ROOT_PROFILE" > /dev/null <<'EOF'
 # root-prompt: red PS1 + dark red terminal background
 _R=$(printf '\033[1;31m')
 _X=$(printf '\033[0m')
