@@ -78,4 +78,33 @@ if [ "$(uname)" = "Darwin" ]; then
   cp -f "$DOTFILES/com.brew.ssh-agent.plist" "$PLIST"
   launchctl unload "$PLIST" 2>/dev/null || true
   launchctl load "$PLIST"
+
+  # brave policy server: serve brave-policy.mobileconfig on localhost so macOS
+  # can poll PayloadUpdateURL and prompt for profile updates automatically.
+  POLICY_AGENT="$HOME/Library/LaunchAgents/com.beddari.policy-server.plist"
+  cat > "$POLICY_AGENT" <<LAEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key><string>com.beddari.policy-server</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/python3</string>
+		<string>-m</string>
+		<string>http.server</string>
+		<string>8765</string>
+		<string>--bind</string>
+		<string>127.0.0.1</string>
+	</array>
+	<key>WorkingDirectory</key><string>$DOTFILES</string>
+	<key>RunAtLoad</key><true/>
+	<key>KeepAlive</key><true/>
+	<key>StandardOutPath</key><string>/dev/null</string>
+	<key>StandardErrorPath</key><string>/dev/null</string>
+</dict>
+</plist>
+LAEOF
+  launchctl unload "$POLICY_AGENT" 2>/dev/null || true
+  launchctl load "$POLICY_AGENT"
 fi
