@@ -2,6 +2,10 @@
 # Configure a red warning prompt for the root shell on macOS and Linux.
 # Sets a red PS1 and a dark red terminal background (via OSC 11) so it's
 # immediately obvious when running as root.
+#
+# macOS: writes to /var/root/.profile (empty by default, safe to overwrite)
+# Linux: writes to /etc/profile.d/root-prompt.sh (sourced for login shells;
+#        does not touch /root/.bashrc)
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -14,7 +18,7 @@ OS="$(uname)"
 if [ "$OS" = "Darwin" ]; then
   ROOT_PROFILE=/var/root/.profile
 elif [ "$OS" = "Linux" ]; then
-  ROOT_PROFILE=/root/.bashrc
+  ROOT_PROFILE=/etc/profile.d/root-prompt.sh
 else
   echo "Unsupported OS: $OS"
   exit 1
