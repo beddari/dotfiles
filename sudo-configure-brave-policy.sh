@@ -43,7 +43,9 @@ if [ "$OS" = "Linux" ]; then
 
 elif [ "$OS" = "Darwin" ]; then
   PROFILE_ID="com.brave.Browser.policy"
-  TMPCONFIG="$(mktemp /tmp/brave-policy.XXXXXX.mobileconfig)"
+  TMPCONFIG="$(mktemp /tmp/brave-policy-XXXXXX)"
+  mv "$TMPCONFIG" "${TMPCONFIG}.mobileconfig"
+  TMPCONFIG="${TMPCONFIG}.mobileconfig"
 
   # Generate the mobileconfig plist from brave-policy.json using Python 3.
   # Fixed UUIDs keep the profile identity stable across re-installs.
@@ -95,13 +97,30 @@ PYEOF
   fi
 
   echo "Installing configuration profile..."
-  profiles install -path "$TMPCONFIG"
-  rm -f "$TMPCONFIG"
-
-  killall cfprefsd 2>/dev/null || true
-
-  echo ""
-  echo "Brave policy profile installed (identifier: ${PROFILE_ID})"
-  echo "Restart Brave and verify at brave://policy"
-  echo "To remove: sudo profiles remove -identifier ${PROFILE_ID} (requires root)"
+  # macOS 15 Sequoia removed 'profiles install' from the command line.
+  # Opening the mobileconfig file triggers System Settings to prompt for installation.
+  # Detect which method is available and use it.
+  if profiles install -path "$TMPCONFIG" 2>/dev/null; then
+    rm -f "$TMPCONFIG"
+    killall cfprefsd 2>/dev/null || true
+    echo ""
+    echo "Brave policy profile installed (identifier: ${PROFILE_ID})"
+    echo "Restart Brave and verify at brave://policy"
+    echo "To remove: sudo profiles remove -identifier ${PROFILE_ID} (requires root)"
+  else
+    # macOS 15+: open the file so System Settings handles installation
+    SAVED="${SCRIPT_DIR}/brave-policy-pending.mobileconfig"
+    cp "$TMPCONFIG" "$SAVED"
+    chmod 644 "$SAVED"
+    rm -f "$TMPCONFIG"
+    echo ""
+    echo "Opening System Settings to the Profiles pane..."
+    echo "Double-click 'Brave Browser Policy' to install it."
+    sudo -u "${SUDO_USER:-$(logname)}" open "$SAVED"
+    sleep 1
+    sudo -u "${SUDO_USER:-$(logname)}" open "x-apple.systempreferences:com.apple.preferences.configurationprofiles"
+    echo ""
+    echo "After installing, run: rm -f '${SAVED}'"
+    echo "Restart Brave and verify at brave://policy"
+  fi
 fi
