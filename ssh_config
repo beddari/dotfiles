@@ -1,10 +1,7 @@
-IdentityFile ~/.ssh/id_yubikey_nano
-IdentityFile ~/.ssh/id_ecdsa_sk
 
 Host *
     AddKeysToAgent yes
 
 Include ~/.lima/*/ssh.config
 Include ~/.colima/ssh_config
-
-Include ~/.ssh/hosts/*
+Include ~/.ssh/config.d/*

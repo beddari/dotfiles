@@ -1,19 +1,16 @@
 [core]
-        pager = delta
-
+  pager = delta
 [interactive]
-        diffFilter = delta --color-only
-
+  diffFilter = delta --color-only
 [delta]
-        navigate = true
-        syntax-theme = ansi
-        line-numbers = true
-
+  navigate = true
+  syntax-theme = ansi
+  line-numbers = true
 [include]
-        path = ~/.config/delta-theme.gitconfig
-
+  path = ~/.config/delta-theme.gitconfig
 [merge]
-        conflictstyle = diff3
-
+  conflictstyle = diff3
 [diff]
-        colorMoved = default
+  colorMoved = default
+[user]
+  signingkey = ~/.ssh/id_yubikey_19668198.pub

@@ -1,0 +1,33 @@
+[user]
+  name = Jan Ivar Beddari
+  email = code@beddari.net
+[alias]
+  lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit
+[include]
+  path = ~/.gitconfig.local
+[github]
+  user = beddari
+[fetch]
+  prune = true
+[gpg]
+  program = gpg
+  format = ssh
+[pull]
+  rebase = true
+[rebase]
+  autoStash = true
+[commit]
+  verbose = true
+  gpgSign = true
+[help]
+  autocorrect = 1
+[diff]
+  tool = meld
+[difftool]
+  prompt = false
+[difftool "meld"]
+  cmd = meld "$LOCAL" "$REMOTE"
+[init]
+  defaultBranch = main
+[tag]
+  forceSignAnnotated = true
