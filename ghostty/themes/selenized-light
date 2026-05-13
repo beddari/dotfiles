@@ -8,11 +8,11 @@ palette = 6=#2AA198
 palette = 7=#EEE8D5
 palette = 8=#586E75
 palette = 9=#CB4B16
-palette = 10=#586E75
-palette = 11=#506268
-palette = 12=#839496
+palette = 10=#428b00
+palette = 11=#a78300
+palette = 12=#006dce
 palette = 13=#565a9c
-palette = 14=#93A1A1
+palette = 14=#00978a
 palette = 15=#EEE8D5
 background = #FEF3DA
 foreground = #506268

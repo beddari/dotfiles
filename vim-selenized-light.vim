@@ -9,7 +9,7 @@ endif
 let g:colors_name = 'selenized-light'
 
 " Palette
-" bg:        #FDF6E3
+" bg:        #FEF3DA
 " bg_dark:   #EEE8D5
 " bg_hl:     #DDD6C1
 " fg:        #506268
@@ -25,26 +25,26 @@ let g:colors_name = 'selenized-light'
 " brviolet:  #565a9c
 
 " UI elements
-hi Normal       guifg=#506268 guibg=#FDF6E3
+hi Normal       guifg=#506268 guibg=#FEF3DA
 hi NormalFloat  guifg=#506268 guibg=#EEE8D5
 hi Cursor       guifg=#FDF6E3 guibg=#506268
 hi CursorLine   guibg=#DDD6C1
-hi CursorLineNr guifg=#B58900 guibg=#FDF6E3
+hi CursorLineNr guifg=#B58900 guibg=#FEF3DA
 hi LineNr       guifg=#93A1A1
-hi SignColumn   guibg=#FDF6E3
+hi SignColumn   guibg=#FEF3DA
 hi ColorColumn  guibg=#EEE8D5
-hi VertSplit    guifg=#93A1A1 guibg=#FDF6E3
+hi VertSplit    guifg=#93A1A1 guibg=#FEF3DA
 hi StatusLine   guifg=#506268 guibg=#EEE8D5 gui=NONE
 hi StatusLineNC guifg=#93A1A1 guibg=#EEE8D5 gui=NONE
 hi TabLine      guifg=#93A1A1 guibg=#EEE8D5 gui=NONE
 hi TabLineFill  guibg=#EEE8D5
-hi TabLineSel   guifg=#506268 guibg=#FDF6E3 gui=bold
+hi TabLineSel   guifg=#506268 guibg=#FEF3DA gui=bold
 hi Pmenu        guifg=#506268 guibg=#EEE8D5
 hi PmenuSel     guifg=#506268 guibg=#DDD6C1
 hi PmenuSbar    guibg=#EEE8D5
 hi PmenuThumb   guibg=#93A1A1
 hi Folded       guifg=#268BD2 guibg=#EEE8D5
-hi FoldColumn   guifg=#93A1A1 guibg=#FDF6E3
+hi FoldColumn   guifg=#93A1A1 guibg=#FEF3DA
 hi NonText      guifg=#93A1A1
 hi SpecialKey   guifg=#93A1A1
 hi Visual       guibg=#DDD6C1
