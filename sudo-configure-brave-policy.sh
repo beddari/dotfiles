@@ -5,8 +5,10 @@
 #        via `profiles install`. The profile is tracked by macOS and survives
 #        Brave updates that would delete a loose /Library/Managed Preferences plist.
 #
-# Linux: writes brave-policy.json directly to /etc/brave/policies/managed/,
-#        which is the standard Chromium/Brave managed policy directory.
+# Linux: symlinks brave-policy.json into /etc/brave/policies/managed/. Requires
+#        the .deb-installed Brave — the snap build does not honor file-based
+#        managed policies regardless of path. The symlink lets the repo file be
+#        the live policy — edits need no re-run.
 #
 # Edit brave-policy.json to change policy values — it is the single source of truth.
 set -eu
@@ -31,14 +33,10 @@ case "$OS" in
 esac
 
 if [ "$OS" = "Linux" ]; then
-  POLICY_DIR="/etc/brave/policies/managed"
-  DEST="${POLICY_DIR}/brave-policy.json"
-  echo "Installing ${DEST}..."
-  mkdir -p "$POLICY_DIR"
-  cp "$POLICY_JSON" "$DEST"
-  chmod 644 "$DEST"
-  echo ""
-  echo "Brave policy installed at ${DEST}"
+  DEST="/etc/brave/policies/managed/brave-policy.json"
+  mkdir -p "$(dirname "$DEST")"
+  ln -sfn "$POLICY_JSON" "$DEST"
+  echo "Symlinked ${DEST} -> ${POLICY_JSON}"
   echo "Restart Brave and verify at brave://policy"
 
 elif [ "$OS" = "Darwin" ]; then
@@ -82,13 +80,6 @@ profile = {
 with open(output_path, "wb") as f:
     plistlib.dump(profile, f, fmt=plistlib.FMT_XML)
 PYEOF
-
-  # Remove old bare plist left by previous installs
-  OLD_PLIST="/Library/Managed Preferences/com.brave.Browser.plist"
-  if [ -f "$OLD_PLIST" ]; then
-    echo "Removing old managed preferences plist..."
-    rm -f "$OLD_PLIST"
-  fi
 
   # Remove existing profile so install is idempotent
   if profiles list 2>/dev/null | grep -q "$PROFILE_ID"; then
