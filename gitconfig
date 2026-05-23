@@ -41,4 +41,4 @@
   name = Jan Ivar Beddari
   email = code@beddari.net
 [gpg "ssh"]
-  defaultKeyCommand = ~/.local/bin/git-ssh-signing-key
+  defaultKeyCommand = sh -c \"ssh-add -L | sed s/^/key::/ | head -1\"
