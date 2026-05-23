@@ -7,6 +7,8 @@ fi
 
 export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+
 # Environment
 if [[ "$(uname)" == "Darwin" ]]; then
     # secure enclave fingerprint based ssh
