@@ -21,7 +21,7 @@ for f in "$DOTFILES"/vim-*.vim; do
 done
 
 # git
-ln "$DOTFILES/gitconfig.local" ~/.gitconfig.local
+ln "$DOTFILES/gitconfig" ~/.gitconfig
 
 # ssh
 mkdir -p ~/.ssh/hosts ~/.ssh/control

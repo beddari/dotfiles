@@ -1,3 +1,5 @@
+  Host mio.local
+    HostName mio.local
 
 Host *
     AddKeysToAgent yes
@@ -5,3 +7,4 @@ Host *
 Include ~/.lima/*/ssh.config
 Include ~/.colima/ssh_config
 Include ~/.ssh/config.d/*
+

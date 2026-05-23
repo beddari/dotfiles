@@ -1,33 +1,44 @@
-[user]
-  name = Jan Ivar Beddari
-  email = code@beddari.net
 [alias]
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit
-[include]
-  path = ~/.gitconfig.local
-[github]
-  user = beddari
+[commit]
+  verbose = true
+  gpgSign = true
+[core]
+  pager = delta
+[delta]
+  navigate = true
+  syntax-theme = ansi
+  line-numbers = true
+[diff]
+  colorMoved = default
+[difftool]
+  prompt = false
 [fetch]
   prune = true
+[github]
+  user = beddari
 [gpg]
   program = gpg
   format = ssh
+[help]
+  autocorrect = 1
+[include]
+  path = ~/.gitconfig.local
+  path = ~/.config/delta-theme.gitconfig
+[init]
+  defaultBranch = main
+[interactive]
+  diffFilter = delta --color-only
+[merge]
+  conflictstyle = diff3
 [pull]
   rebase = true
 [rebase]
   autoStash = true
-[commit]
-  verbose = true
-  gpgSign = true
-[help]
-  autocorrect = 1
-[diff]
-  tool = meld
-[difftool]
-  prompt = false
-[difftool "meld"]
-  cmd = meld "$LOCAL" "$REMOTE"
-[init]
-  defaultBranch = main
 [tag]
   forceSignAnnotated = true
+[user]
+  name = Jan Ivar Beddari
+  email = code@beddari.net
+[gpg "ssh"]
+	defaultKeyCommand = ssh-add -L

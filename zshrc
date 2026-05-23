@@ -1,10 +1,6 @@
 # Homebrew
 if [[ "$(uname)" == "Darwin" ]]; then
     [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
-    export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
-    export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-    # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
-    bindkey -s '\xc2\xa0' ' '
 elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
@@ -12,6 +8,16 @@ fi
 export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
 
 # Environment
+if [[ "$(uname)" == "Darwin" ]]; then
+    # secure enclave fingerprint based ssh
+    # https://gist.github.com/arianvp/5f59f1783e3eaf1a2d4cd8e952bb4acf
+    export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
+    export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+    # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
+    bindkey -s '\xc2\xa0' ' '
+    # Set config folder for e.g sops
+    export XDG_CONFIG_HOME="$HOME/.config"
+fi
 export EDITOR=vim
 export LESS='-FRXx4'
 
@@ -107,8 +113,7 @@ fi
 brew() {
     command brew "$@"
     if [[ "$1" == "upgrade" ]]; then
-        local bf="$HOME/kode/dotfiles/Brewfile.$(uname)"
-        [[ -f "$bf" ]] && command brew bundle --file="$bf" --vscode --go
+        command brew bundle upgrade --global
     fi
 }
 
