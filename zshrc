@@ -40,6 +40,11 @@ setopt HIST_IGNORE_SPACE
 setopt HIST_REDUCE_BLANKS
 bindkey '^R' history-incremental-search-backward
 bindkey -M viins '^R' history-incremental-search-backward
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^U' kill-whole-line
+bindkey -M viins '^W' backward-kill-word
 
 # Keep only recent timestamped history entries in HISTFILE.
 _prune_history_file() {
