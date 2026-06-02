@@ -2,3 +2,7 @@ config-file = ?~/.config/ghostty/theme.local
 config-file = ?~/.config/ghostty/config.local
 
 shell-integration-features = ssh-env,ssh-terminfo
+
+# Close the current split (not the whole tab) on Linux, matching macOS cmd+w.
+# Default is close_tab:this, which would kill all splits in the tab.
+keybind = ctrl+shift+w=close_surface
