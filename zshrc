@@ -116,14 +116,6 @@ if [[ -f ~/.dircolors ]]; then
     fi
 fi
 
-# Brew wrapper: auto-sync vscode/go extensions from Brewfile after upgrade
-brew() {
-    command brew "$@"
-    if [[ "$1" == "upgrade" ]]; then
-        command brew bundle upgrade --global
-    fi
-}
-
 # Completions
 if command -v brew &>/dev/null; then
     fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
