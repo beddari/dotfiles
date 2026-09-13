@@ -35,7 +35,17 @@ else
 fi
 if [ -f "$VSCODIUM_SETTINGS" ]; then
   tmp=$(mktemp)
-  sed "s/\"workbench.colorTheme\": \".*\"/\"workbench.colorTheme\": \"$VSCODE_THEME\"/" "$VSCODIUM_SETTINGS" > "$tmp"
+  if grep -q '"workbench.colorTheme"' "$VSCODIUM_SETTINGS"; then
+    sed "s/\"workbench.colorTheme\": \".*\"/\"workbench.colorTheme\": \"$VSCODE_THEME\"/" "$VSCODIUM_SETTINGS" > "$tmp"
+  else
+    # first run: insert the key right after the opening brace
+    awk -v t="$VSCODE_THEME" '
+      !done && /^[[:space:]]*{[[:space:]]*$/ {
+        print; printf "    \"workbench.colorTheme\": \"%s\",\n", t; done = 1; next
+      }
+      { print }
+    ' "$VSCODIUM_SETTINGS" > "$tmp"
+  fi
   mv "$tmp" "$VSCODIUM_SETTINGS"
 fi
 
