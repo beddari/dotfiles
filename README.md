@@ -18,7 +18,7 @@ Component scripts can also be run individually:
 
 ```sh
 sh install-brew.sh            # Homebrew + Brewfile.$(uname)
-sh install-dotfiles.sh        # symlink dotfiles, install VS Code config, etc.
+sh install-dotfiles.sh        # symlink dotfiles, install VSCodium config, etc.
 ```
 
 `install-dotfiles.sh` is idempotent — it uses `ln -sfn` so re-runs re-point
@@ -30,8 +30,10 @@ symlinks to whatever the dotfiles directory currently is.
 
 - Homebrew shell env, `~/.local/bin` and `~/go/bin` on PATH.
 - Pruned-and-shared zsh history (200k entries, 21-day retention, dedup).
-- `brew()` wrapper that re-runs `brew bundle --vscode --go` after `brew upgrade`
-  so VS Code extensions and Go tools stay in sync with `Brewfile.$(uname)`.
+- `bashrc` only: `brew()` wrapper that re-runs `brew bundle --vscode --go` after
+  `brew upgrade` so VSCodium extensions and Go tools stay in sync with
+  `Brewfile.$(uname)`. `--vscode` is the Homebrew flag name; with no `code` on
+  PATH, `brew bundle` falls back to the `codium` CLI.
 - macOS-only: remaps non-breaking space (Option+Space on Norwegian layouts)
   back to regular space.
 - `terminfo-install <host>` ships the local `$TERM` entry to a remote box via
@@ -45,7 +47,7 @@ Magenta `❯` on success, red on error. Shows `$ZMX_SESSION` when set.
 
 ### Themes — `theme-*.sh`, `theme.sh`, `theme-terminal-colors-preview.sh`
 
-Four coordinated themes covering Ghostty, VS Code, Vim, dircolors, and
+Four coordinated themes covering Ghostty, VSCodium, Vim, dircolors, and
 [delta](https://github.com/dandavison/delta) (git diff pager):
 
 | Script                          | Palette                                                                       |
@@ -72,13 +74,32 @@ Ghostty to reload live. The active theme is recorded by the existence of
 colorschemes: `selenized-dark`, `selenized-light`, `solarized-osaka-day`,
 `solarized-osaka-night`.
 
-### VS Code — `vscode-settings.json`, `vscode-keybindings.json`, `vscode-*` extension dirs
+### VSCodium — `vscode-settings.json`, `vscode-keybindings.json`, `vscode-*` extension dirs
 
-`install-dotfiles.sh` merges `vscode-settings.json` into the existing
-user settings (`jq -s '.[0] * .[1]'`, dotfiles wins) and symlinks keybindings.
-Two local theme extensions get symlinked into `~/.vscode/extensions/`:
+[VSCodium](https://vscodium.com) — the MS-branding/telemetry-free build of VS
+Code. The files keep their `vscode-` prefix because the formats are unchanged;
+only the install paths differ.
+
+| | macOS | Linux |
+|---|---|---|
+| user config | `~/Library/Application Support/VSCodium/User/` | `~/.config/VSCodium/User/` |
+| extensions | `~/.vscode-oss/extensions/` | `~/.vscode-oss/extensions/` |
+
+`install-dotfiles.sh` merges `vscode-settings.json` into the existing user
+settings (`jq -s '.[0] * .[1]'`, dotfiles wins) and symlinks keybindings. Two
+local theme extensions get symlinked into the extensions dir:
 `darkerized-better-solarized` and `solarized-osaka-night`. Theme switching is
-done by `theme.sh` via a `sed`-based rewrite of `workbench.colorTheme`.
+done by `theme.sh`, which rewrites `workbench.colorTheme` in place (inserting
+the key on first run).
+
+Because `settings.json` goes through `jq`, keep `vscode-settings.json` strict
+JSON — no JSONC comments.
+
+VSCodium ships with [Open VSX](https://open-vsx.org) as its marketplace, not
+the MS Marketplace. Extensions Microsoft publishes under a
+Marketplace-only licence (Copilot Chat, `ms-vscode-remote.*`, and also
+`tilt-dev.tiltfile`) are therefore unavailable; `jeanp413.open-remote-ssh` is
+the Open VSX stand-in for Remote-SSH.
 
 ### Git — `gitconfig`, `gitconfig.local`, `delta-*.gitconfig`
 
@@ -110,8 +131,13 @@ overrides.
 
 `install-brew.sh` installs Homebrew, then runs
 `brew bundle --file=Brewfile.$(uname)`. Darwin gets the full kitchen sink
-(casks: Brave, Ghostty, VS Code, Joplin, Proton Pass, Signal, Spotify,
-Rectangle…). Linux is a leaner brews-and-vscode-extensions list.
+(casks: Brave, Ghostty, VSCodium, Joplin, Proton Pass, Signal, Spotify…).
+Linux is a leaner brews-and-extensions list.
+
+Homebrew casks are macOS-only, so on Linux VSCodium has to be installed from
+its own [apt/rpm repo](https://vscodium.com/#install) before `brew bundle`
+can install extensions — the `vscode "…"` entries are driven by whatever
+`code`/`codium` binary is found on PATH.
 
 ## Optional / manual scripts
 

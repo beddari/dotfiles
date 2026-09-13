@@ -35,7 +35,8 @@ if [[ -f ~/.dircolors ]]; then
     fi
 fi
 
-# Brew wrapper: auto-sync vscode/go extensions from Brewfile after upgrade
+# Brew wrapper: auto-sync VSCodium/go extensions from Brewfile after upgrade
+# (--vscode drives the `codium` CLI when `code` is not on PATH)
 brew() {
     command brew "$@"
     if [[ "$1" == "upgrade" ]]; then
