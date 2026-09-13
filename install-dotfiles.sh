@@ -35,26 +35,27 @@ ln "$DOTFILES/ghostty" ~/.config/ghostty
 # starship
 ln "$DOTFILES/starship.toml" ~/.config/starship.toml
 
-# vscode
+# vscodium
 if [ "$(uname)" = "Darwin" ]; then
-  VSCODE_DIR="$HOME/Library/Application Support/Code/User"
+  VSCODIUM_DIR="$HOME/Library/Application Support/VSCodium/User"
 else
-  VSCODE_DIR="$HOME/.config/Code/User"
+  VSCODIUM_DIR="$HOME/.config/VSCodium/User"
 fi
-mkdir -p "$VSCODE_DIR"
-ln "$DOTFILES/vscode-keybindings.json" "$VSCODE_DIR/keybindings.json"
-if [ -f "$VSCODE_DIR/settings.json" ]; then
+mkdir -p "$VSCODIUM_DIR"
+ln "$DOTFILES/vscode-keybindings.json" "$VSCODIUM_DIR/keybindings.json"
+if [ -f "$VSCODIUM_DIR/settings.json" ]; then
   # merge: dotfiles baseline wins, local-only keys preserved
-  jq -s '.[0] * .[1]' "$VSCODE_DIR/settings.json" "$DOTFILES/vscode-settings.json" > "$VSCODE_DIR/settings.json.tmp"
-  mv "$VSCODE_DIR/settings.json.tmp" "$VSCODE_DIR/settings.json"
+  jq -s '.[0] * .[1]' "$VSCODIUM_DIR/settings.json" "$DOTFILES/vscode-settings.json" > "$VSCODIUM_DIR/settings.json.tmp"
+  mv "$VSCODIUM_DIR/settings.json.tmp" "$VSCODIUM_DIR/settings.json"
 else
-  cp "$DOTFILES/vscode-settings.json" "$VSCODE_DIR/settings.json"
+  cp "$DOTFILES/vscode-settings.json" "$VSCODIUM_DIR/settings.json"
 fi
 
-VSCODE_EXT="$HOME/.vscode/extensions"
-mkdir -p "$VSCODE_EXT"
-ln "$DOTFILES/vscode-solarized-osaka-night" "$VSCODE_EXT/solarized-osaka-night"
-ln "$DOTFILES/vscode-darkerized-better-solarized" "$VSCODE_EXT/darkerized-better-solarized"
+# VSCodium keeps extensions in .vscode-oss (dataFolderName), not .vscode
+VSCODIUM_EXT="$HOME/.vscode-oss/extensions"
+mkdir -p "$VSCODIUM_EXT"
+ln "$DOTFILES/vscode-solarized-osaka-night" "$VSCODIUM_EXT/solarized-osaka-night"
+ln "$DOTFILES/vscode-darkerized-better-solarized" "$VSCODIUM_EXT/darkerized-better-solarized"
 
 # theme scripts
 mkdir -p ~/.local/bin

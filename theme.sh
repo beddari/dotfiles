@@ -27,16 +27,16 @@ ln -sf "$DOTFILES/dircolors.$VARIANT" "$HOME/.dircolors"
 mkdir -p "$HOME/.vim"
 echo "colorscheme $VIM_THEME" > "$HOME/.vim/theme.vim"
 
-# 5. VS Code color theme
+# 5. VSCodium color theme
 if [ "$(uname)" = "Darwin" ]; then
-  VSCODE_SETTINGS="$HOME/Library/Application Support/Code/User/settings.json"
+  VSCODIUM_SETTINGS="$HOME/Library/Application Support/VSCodium/User/settings.json"
 else
-  VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
+  VSCODIUM_SETTINGS="$HOME/.config/VSCodium/User/settings.json"
 fi
-if [ -f "$VSCODE_SETTINGS" ]; then
+if [ -f "$VSCODIUM_SETTINGS" ]; then
   tmp=$(mktemp)
-  sed "s/\"workbench.colorTheme\": \".*\"/\"workbench.colorTheme\": \"$VSCODE_THEME\"/" "$VSCODE_SETTINGS" > "$tmp"
-  mv "$tmp" "$VSCODE_SETTINGS"
+  sed "s/\"workbench.colorTheme\": \".*\"/\"workbench.colorTheme\": \"$VSCODE_THEME\"/" "$VSCODIUM_SETTINGS" > "$tmp"
+  mv "$tmp" "$VSCODIUM_SETTINGS"
 fi
 
 echo "Switched to $THEME"
