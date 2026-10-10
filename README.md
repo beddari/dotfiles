@@ -1,212 +1,102 @@
 # dotfiles
 
-Personal shell, editor, terminal, and OS-config dotfiles for macOS and Linux.
+The shell, editor, terminal and system settings of two computers: a Mac and
+an Ubuntu 24.04 workstation. [Homebrew](https://brew.sh) installs the tools
+on both, and [Task](https://taskfile.dev) links the files into the home
+directory.
 
-The repo is a flat collection of files plus a few install scripts. `install.sh`
-is the entry point; everything else is either symlinked into `$HOME` or invoked
-explicitly when needed.
+## What you get
 
-## Bootstrap
+- zsh with Homebrew, a history shared between shells and kept for 21 days,
+  and the [Starship](https://starship.rs) prompt. bash has the same basics.
+- Four themes, each one for Ghostty, VSCodium, Vim, dircolors and delta at
+  once, switched with one command.
+- git with commits and tags signed by an ssh key in the agent, and delta as
+  its pager.
+- [Ghostty](https://ghostty.org) and [VSCodium](https://vscodium.com),
+  configured, with the VSCodium extensions from Open VSX.
+- On the Mac: Homebrew's `ssh-agent` started by launchd, ssh keys in the
+  Secure Enclave beside the YubiKey, and Touch ID for `sudo`.
+- Brave with its own policy: no Rewards, Wallet, VPN, AI chat, News, or
+  password manager.
+
+## On a new computer
+
+You need git and curl. On Ubuntu, install VSCodium from
+[its apt repository](https://vscodium.com/#install) first if you want the
+extensions; Homebrew has it for macOS only.
 
 ```sh
 git clone https://codeberg.org/beddari/dotfiles ~/kode/dotfiles
 cd ~/kode/dotfiles
-./install.sh                  # install Homebrew + brew bundle + symlink dotfiles
+bin/brew-bundle     # Homebrew and the packages, task among them
+task link           # link the files and apply the theme
+task status         # check that each link is in place
 ```
 
-Component scripts can also be run individually:
+Then open a new shell. `task link` can run again at any time: it puts back
+each link, removes those to files that have moved, and keeps the theme.
 
-```sh
-sh install-brew.sh            # Homebrew + Brewfile.$(uname)
-sh install-dotfiles.sh        # symlink dotfiles, install VSCodium config, etc.
+## Tasks
+
+| Task | What it does |
+|---|---|
+| `task brew` | Install Homebrew when it is missing, and the packages in `Brewfile` |
+| `task link` | Link the dotfiles into the home directory and apply the theme in use |
+| `task status` | Show each link, the theme, missing packages and, on the Mac, the ssh-agent |
+| `task theme -- <name>` | Switch to a theme; `task theme` alone lists them |
+| `task theme-preview` | Show the prompt and `ls` in every theme |
+| `task ssh-enclave -- <command>` | Make and load ssh keys in the Secure Enclave, on macOS; `task ssh-enclave` alone lists the commands. [docs/ssh.md](docs/ssh.md) |
+| `task touchid` | Let Touch ID answer `sudo` and the authorization dialogs, on macOS |
+| `task root-prompt` | Give root shells a red prompt and a dark red background |
+| `task brave-policy` | Install `brave/policy.json` as Brave's managed policy |
+| `task lint` | Run shellcheck on the scripts and check the JSON files |
+
+The last three change the system and run with `sudo`. The others change only
+your home directory.
+
+`task link` also puts two commands in `~/.local/bin`, for use anywhere:
+
+| Command | What it does |
+|---|---|
+| `theme <name>` | The same as `task theme` |
+| `ssh-enclave <command>` | The same as `task ssh-enclave` |
+
+## Local to one computer
+
+What differs between the two computers goes in files that git ignores, or
+that live outside this repository:
+
+| File | Read by |
+|---|---|
+| `~/.gitconfig.local` | git, included by `home/gitconfig` |
+| `~/.config/ghostty/config.local` | Ghostty, after `ghostty/config` |
+| `~/.ssh/config.d/*` | ssh, included by `home/ssh_config` |
+| `~/.config/git/allowed_signers` | git, to verify ssh signatures |
+
+## How it is built
+
+```
+Taskfile.yml        the tasks; each one calls a script in bin/
+Brewfile            the packages, for both computers; OS.mac? marks the Mac's
+bin/                one script per task, and functions.sh that they share
+local/bin/          the commands that task link puts in ~/.local/bin
+home/               shell, git, ssh and Starship, linked into ~ and ~/.config
+vim/                vimrc and the four colorschemes
+ghostty/            linked as ~/.config/ghostty, with the four palettes
+vscodium/           settings, keybindings and two theme extensions
+themes/             delta and dircolors, one file per theme
+brave/policy.json   Brave's managed policy
+macos/              the LaunchAgent for Homebrew's ssh-agent
+docs/               the details
 ```
 
-`install-dotfiles.sh` is idempotent — it uses `ln -sfn` so re-runs re-point
-symlinks to whatever the dotfiles directory currently is.
+`bin/functions.sh` lists every link that `task link` makes, and `task status`
+checks the same list.
 
-## Features
-
-### Shell — `zshrc`, `bashrc`
-
-- Homebrew shell env, `~/.local/bin` and `~/go/bin` on PATH.
-- Pruned-and-shared zsh history (200k entries, 21-day retention, dedup).
-- `bashrc` only: `brew()` wrapper that re-runs `brew bundle --vscode --go` after
-  `brew upgrade` so VSCodium extensions and Go tools stay in sync with
-  `Brewfile.$(uname)`. `--vscode` is the Homebrew flag name; with no `code` on
-  PATH, `brew bundle` falls back to the `codium` CLI.
-- macOS-only: remaps non-breaking space (Option+Space on Norwegian layouts)
-  back to regular space.
-- `terminfo-install <host>` ships the local `$TERM` entry to a remote box via
-  `infocmp | ssh host tic -x -` (useful with Ghostty/non-stock terminals).
-
-### Prompt — `starship.toml`
-
-[Starship](https://starship.rs) prompt with a compact custom format:
-remote-hostname arrow → directory → git branch → git status → character.
-Magenta `❯` on success, red on error. Shows `$ZMX_SESSION` when set.
-
-### Themes — `theme-*.sh`, `theme.sh`, `theme-terminal-colors-preview.sh`
-
-Four coordinated themes covering Ghostty, VSCodium, Vim, dircolors, and
-[delta](https://github.com/dandavison/delta) (git diff pager):
-
-| Script                          | Palette                                                                       |
-|---------------------------------|-------------------------------------------------------------------------------|
-| `theme-dark-selenized.sh`       | [Selenized dark](https://github.com/jan-warchol/selenized)                    |
-| `theme-light-selenized.sh`      | Selenized light                                                               |
-| `theme-dark-solarized-osaka.sh` | [Solarized Osaka night](https://github.com/craftzdog/solarized-osaka.nvim)    |
-| `theme-light-solarized-osaka.sh`| Solarized Osaka day                                                           |
-
-Each is a thin wrapper that sets env vars and sources `theme.sh`, which
-symlinks the per-tool color files into `$HOME/.config/` and sends `SIGUSR2` to
-Ghostty to reload live. The active theme is recorded by the existence of
-`~/.config/delta-theme.gitconfig`.
-
-```sh
-~/.local/bin/theme-dark-solarized-osaka.sh   # installed by install-dotfiles.sh
-./theme-terminal-colors-preview.sh           # preview prompt + ls in every theme
-```
-
-### Vim — `vimrc`, `vim-*.vim`
-
-`vimrc` enables `termguicolors`, then sources `~/.vim/theme.vim` if present
-(written by `theme.sh`). Falls back to `solarized-osaka-night`. Bundled
-colorschemes: `selenized-dark`, `selenized-light`, `solarized-osaka-day`,
-`solarized-osaka-night`.
-
-### VSCodium — `vscode-settings.json`, `vscode-keybindings.json`, `vscode-*` extension dirs
-
-[VSCodium](https://vscodium.com) — the MS-branding/telemetry-free build of VS
-Code. The files keep their `vscode-` prefix because the formats are unchanged;
-only the install paths differ.
-
-| | macOS | Linux |
-|---|---|---|
-| user config | `~/Library/Application Support/VSCodium/User/` | `~/.config/VSCodium/User/` |
-| extensions | `~/.vscode-oss/extensions/` | `~/.vscode-oss/extensions/` |
-
-`install-dotfiles.sh` merges `vscode-settings.json` into the existing user
-settings (`jq -s '.[0] * .[1]'`, dotfiles wins) and symlinks keybindings. Two
-local theme extensions get symlinked into the extensions dir:
-`darkerized-better-solarized` and `solarized-osaka-night`. Theme switching is
-done by `theme.sh`, which rewrites `workbench.colorTheme` in place (inserting
-the key on first run).
-
-Because `settings.json` goes through `jq`, keep `vscode-settings.json` strict
-JSON — no JSONC comments.
-
-VSCodium ships with [Open VSX](https://open-vsx.org) as its marketplace, not
-the MS Marketplace. Extensions Microsoft publishes under a
-Marketplace-only licence (Copilot Chat, `ms-vscode-remote.*`, and also
-`tilt-dev.tiltfile`) are therefore unavailable; `jeanp413.open-remote-ssh` is
-the Open VSX stand-in for Remote-SSH.
-
-### Git — `gitconfig`, `gitconfig.local`, `delta-*.gitconfig`
-
-`gitconfig` (placed at `/etc/gitconfig` or sourced manually) provides:
-- ssh-signed commits and signed annotated tags
-- `git lg` alias for a compact log graph
-- rebase-on-pull with auto-stash
-- includes `~/.gitconfig.local` (symlinked from `gitconfig.local`), which
-  configures [delta](https://github.com/dandavison/delta) as pager and
-  includes `~/.config/delta-theme.gitconfig` (per-theme syntax/diff colors).
-
-### SSH — `ssh_config`
-
-Adds keys to the agent on first use, plus `Include` directives for Lima,
-Colima, and a `~/.ssh/config.d/` drop-in directory.
-
-macOS: `com.brew.ssh-agent.plist` is loaded as a LaunchAgent by
-`install-dotfiles.sh` so a Homebrew-installed `ssh-agent` runs at login. The
-agent socket is exported as `$SSH_AUTH_SOCK` in `zshrc`/`bashrc`.
-
-### Terminal — `ghostty/`
-
-[Ghostty](https://ghostty.org) config with four custom palettes under
-`ghostty/themes/`. The top-level `ghostty/config` is minimal — it loads
-`theme.local` (managed by `theme.sh`) and `config.local` for host-specific
-overrides.
-
-### Brewfiles — `Brewfile.Darwin`, `Brewfile.Linux`
-
-`install-brew.sh` installs Homebrew, then runs
-`brew bundle --file=Brewfile.$(uname)`. Darwin gets the full kitchen sink
-(casks: Brave, Ghostty, VSCodium, Joplin, Proton Pass, Signal, Spotify…).
-Linux is a leaner brews-and-extensions list.
-
-Homebrew casks are macOS-only, so on Linux VSCodium has to be installed from
-its own [apt/rpm repo](https://vscodium.com/#install) before `brew bundle`
-can install extensions — the `vscode "…"` entries are driven by whatever
-`code`/`codium` binary is found on PATH.
-
-## Optional / manual scripts
-
-These aren't run by `install.sh`. Invoke when needed.
-
-### Red root-shell warning prompt
-
-```sh
-sudo ./sudo-configure-root-prompt.sh
-```
-
-Writes a `PS1` that says `[root]` in red and sends OSC 11 to set the terminal
-background dark red whenever a root shell is active (cleared via OSC 111 on
-exit). Targets `/var/root/.profile` on macOS and `/etc/profile.d/root-prompt.sh`
-on Linux.
-
-### Touch ID for sudo and GUI prompts (macOS)
-
-```sh
-sudo ./sudo-configure-touchid.sh
-```
-
-Idempotent. Creates `/etc/pam.d/sudo_local` (stable since macOS 14 Sonoma)
-and prepends `pam_localauthentication.so` to `/etc/pam.d/authorization` so
-GUI authorization dialogs accept Touch ID. May need to be re-run after a
-major macOS upgrade — `/etc/pam.d/authorization` is OS-managed.
-
-### Brave managed policies — `brave-policy.json`, `sudo-configure-brave-policy.sh`
-
-Brave runs with a hardened policy set (Rewards/Wallet/VPN/AI/News/P3A
-disabled, autofill and password manager off). `brave-policy.json` is the
-single source of truth.
-
-```sh
-sudo ./sudo-configure-brave-policy.sh
-```
-
-- **macOS:** generates a `.mobileconfig` and installs it as a configuration
-  profile (`com.brave.Browser.policy`) via `profiles install`. Falls back to
-  opening System Settings → Profiles on macOS 15 Sequoia, where command-line
-  install was removed.
-- **Linux:** symlinks `brave-policy.json` into `/etc/brave/policies/managed/`,
-  so editing the JSON in this repo immediately updates the live policy.
-
-  **Requires the .deb-installed Brave.** The snap build does not honor
-  file-based managed policies regardless of path — confirmed both empirically
-  and in [brave/brave-browser#19052](https://github.com/brave/brave-browser/issues/19052).
-  If you're on the snap, switch first:
-  ```sh
-  cp -a ~/snap/brave/current/.config/BraveSoftware ~/.config/BraveSoftware
-  sudo snap remove --purge brave
-  sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-  echo 'deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main' \
-    | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-  sudo apt update && sudo apt install -y brave-browser
-  ```
-
-Verify in `brave://policy` — `Reload policies` picks up edits without
-restarting the browser on the .deb build.
-
-## External references
-
-- [Homebrew](https://brew.sh) — `install-brew.sh`, `Brewfile.*`
-- [Starship](https://starship.rs) — `starship.toml`
-- [Ghostty](https://ghostty.org) — `ghostty/`
-- [delta](https://github.com/dandavison/delta) — git pager, themed
-- [Selenized](https://github.com/jan-warchol/selenized) — palette for one theme pair
-- [Solarized Osaka](https://github.com/craftzdog/solarized-osaka.nvim) — palette for the other theme pair
-- [Brave Group Policy reference](https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy) — policy keys
-- [Chromium enterprise policies](https://chromium.googlesource.com/chromium/src/+/HEAD/docs/enterprise/policies.md) — underlying policy mechanism
-- [Apple `pam_tid` / `sudo_local`](https://support.apple.com/guide/security/touch-id-and-face-id-security-secd9952567f/web) — Touch ID for sudo background
+| Document | Content |
+|---|---|
+| [docs/ssh.md](docs/ssh.md) | The ssh-agent, keys in the Secure Enclave, the YubiKey, git signing |
+| [docs/themes.md](docs/themes.md) | The four themes and how a switch reaches each tool |
+| [docs/vscodium.md](docs/vscodium.md) | Paths, settings, Open VSX, and VSCodium on Ubuntu |
+| [docs/system.md](docs/system.md) | Touch ID, the root prompt and the Brave policy |

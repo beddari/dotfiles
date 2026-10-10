@@ -5,16 +5,20 @@ elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
-export PATH="$PATH:$HOME/.local/bin:$HOME/go/bin"
+export PATH="$HOME/.local/bin:$HOME/go/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
 
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
 # Environment
 if [[ "$(uname)" == "Darwin" ]]; then
-    # secure enclave fingerprint based ssh
-    # https://gist.github.com/arianvp/5f59f1783e3eaf1a2d4cd8e952bb4acf
-    export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
+    # No SSH_SK_PROVIDER: it would hide the YubiKey. Secure Enclave keys get
+    # their provider per key from `ssh-enclave load` instead.
     export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+    # The agent forgets enclave keys on restart; re-adding needs no touch.
+    if command -v ssh-enclave >/dev/null &&
+        ! ssh-add -l 2>/dev/null | grep -q 'ECDSA-SK)$'; then
+        ssh-enclave load 2>/dev/null
+    fi
     # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
     bindkey -s '\xc2\xa0' ' '
     # Set config folder for e.g sops
@@ -127,6 +131,41 @@ compinit
 if command -v zmx &>/dev/null; then
     eval "$(zmx completions zsh)"
 fi
+
+# Forward local zmx sessions to a remote host over ssh -R, so an agent
+# there drives this Mac with plain zmx run/write/history/send/wait.
+# The remote side cannot create sessions here; forward as many as it needs.
+#   zmx-portal [host] [session...]   default: 192.168.0.3 macos-1 macos-2
+# The remote zmx must match the local version (same IPC protocol).
+function zmx-portal() {
+    local host="${1:-192.168.0.3}"
+    local sessions=("${@:2}")
+    local ldir rdir s
+    local forwards=()
+
+    (( $#sessions )) || sessions=(macos-1 macos-2)
+    ldir="$(zmx version | awk '$1 == "socket_dir" { print $2 }')" || return
+    for s in $sessions; do
+        if ! zmx list --short 2>/dev/null | grep -qx "$s"; then
+            zmx run "$s" -d true || return
+            zmx set "$s" role=portal
+        fi
+    done
+
+    # Ask the remote zmx for its socket dir and clear stale sockets,
+    # since StreamLocalBindUnlink only applies to -R in the remote sshd_config.
+    rdir="$(ssh "$host" \
+        'd=$(zmx version 2>/dev/null | awk '\''$1 == "socket_dir" { print $2 }'\'')
+         d=${d:-${ZMX_DIR:-${XDG_RUNTIME_DIR:?}/zmx}} &&
+         mkdir -p -m 700 "$d" && cd "$d" && rm -f '"${(j: :)${(@q)sessions}}"' && echo "$d"')" || return
+    [[ -n "$rdir" ]] || { echo "zmx-portal: no socket_dir on $host" >&2; return 1; }
+
+    for s in $sessions; do
+        forwards+=(-R "$rdir/$s:$ldir/$s")
+    done
+    echo "zmx-portal: $sessions -> $host:$rdir (Ctrl-C to close)"
+    ssh -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes $forwards "$host"
+}
 
 # Install local TERM terminfo on a remote host
 function terminfo-install() {

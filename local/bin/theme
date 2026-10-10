@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+#
+# Switches Ghostty, VSCodium, Vim, dircolors and delta to one theme, and
+# makes Ghostty reload at once:
+#
+#   theme selenized-dark
+#
+# It is linked into ~/.local/bin, so it runs from anywhere; the theme files
+# are found through that link.
+#
+
+self="$0"
+[[ -L "$self" ]] && self="$(readlink "$self")"
+source "${self%/*}/../../bin/functions.sh" || exit $?
+
+#
+# Prints the usage.
+#
+function usage()
+{
+	cat <<USAGE
+usage: theme <name>
+
+  selenized-dark          Selenized dark
+  selenized-light         Selenized light
+  solarized-osaka-dark    Solarized Osaka night
+  solarized-osaka-light   Solarized Osaka day
+USAGE
+}
+
+#
+# Sets what each tool calls the theme.
+#
+function select_theme()
+{
+	local name="$1"
+
+	case "$name" in
+		selenized-dark)
+			variant="dark"
+			ghostty_theme="selenized-dark"
+			vim_theme="selenized-dark"
+			vscodium_theme="Darkerized Better Selenized Dark"
+			;;
+		selenized-light)
+			variant="light"
+			ghostty_theme="selenized-light"
+			vim_theme="selenized-light"
+			vscodium_theme="Darkerized Better Selenized Light"
+			;;
+		solarized-osaka-dark)
+			variant="dark"
+			ghostty_theme="solarized-osaka-night"
+			vim_theme="solarized-osaka-night"
+			vscodium_theme="Solarized Osaka Night"
+			;;
+		solarized-osaka-light)
+			variant="light"
+			ghostty_theme="solarized-osaka-day"
+			vim_theme="solarized-osaka-day"
+			vscodium_theme="Solarized Osaka Day"
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+#
+# Sets workbench.colorTheme in the VSCodium user settings, when there are
+# any. The key is added after the opening brace when it is missing.
+#
+function set_vscodium_theme()
+{
+	local settings="$vscodium_dir/settings.json"
+
+	[[ -f "$settings" ]] || return 0
+
+	if grep -q '"workbench.colorTheme"' "$settings"; then
+		sed "s/\"workbench.colorTheme\": \".*\"/\"workbench.colorTheme\": \"$vscodium_theme\"/" \
+			"$settings" > "$settings.tmp" || return $?
+	else
+		awk -v t="$vscodium_theme" '
+			!done && /^[[:space:]]*{[[:space:]]*$/ {
+				print; printf "    \"workbench.colorTheme\": \"%s\",\n", t
+				done = 1; next
+			}
+			{ print }
+		' "$settings" > "$settings.tmp" || return $?
+	fi
+	mv "$settings.tmp" "$settings"
+}
+
+name="${1:-}"
+case "$name" in
+	""|-h|--help)	usage; exit ;;
+esac
+select_theme "$name" || { usage >&2; exit 1; }
+
+mkdir -p "$HOME/.config/ghostty" "$HOME/.vim" || fail "mkdir failed!"
+
+ln -sfn "$root/themes/delta-$name.gitconfig" \
+	"$HOME/.config/delta-theme.gitconfig" || fail "Linking delta failed!"
+ln -sfn "$root/themes/dircolors.$variant" "$HOME/.dircolors" ||
+	fail "Linking dircolors failed!"
+echo "colorscheme $vim_theme" > "$HOME/.vim/theme.vim" ||
+	fail "Writing ~/.vim/theme.vim failed!"
+echo "theme = $ghostty_theme" > "$HOME/.config/ghostty/theme.local" ||
+	fail "Writing the Ghostty theme failed!"
+set_vscodium_theme || fail "Setting the VSCodium theme failed!"
+
+killall -USR2 ghostty 2>/dev/null
+log "Switched to $name"

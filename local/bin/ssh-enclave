@@ -1,0 +1,250 @@
+#!/usr/bin/env bash
+#
+# Manages ssh keys in the Secure Enclave of a Mac, on macOS 15 and newer.
+#
+# sc_auth makes each key, P-256 and non-exportable, and ssh uses it through
+# Apple's security key provider /usr/lib/ssh-keychain.dylib. The private key
+# never leaves the enclave. ~/.ssh/id_enclave_<label> only points at it, so it
+# has no passphrase. The label is the Mac's serial number unless one is given,
+# the way the YubiKey's key is ~/.ssh/id_yubikey_<serial>.
+#
+# The provider is given per key, with ssh-add -S, and not as SSH_SK_PROVIDER:
+# ssh-agent remembers which provider added a key, so keys in the enclave and
+# on a YubiKey work side by side. docs/ssh.md has the reasons.
+#
+
+provider="/usr/lib/ssh-keychain.dylib"
+prefix="$HOME/.ssh/id_enclave_"
+
+#
+# Prints the usage.
+#
+function usage()
+{
+	cat <<USAGE
+usage: ssh-enclave <command> [args]
+
+  create [--no-touch] [label]  make a key that asks for Touch ID, or not with
+                               --no-touch, write its stub and load it
+  list                         the keys in the enclave and those in the agent
+  stubs                        write ~/.ssh/id_enclave_<label>{,.pub} for every
+                               key
+  load                         add every stub to the agent, with no PIN or touch
+  pub [label]                  print the public key
+  delete <label>               remove the key from the agent, enclave and disk
+
+The label is $(serial) unless one is given: this Mac's serial number.
+USAGE
+}
+
+#
+# Prints an error message and exits.
+#
+function fail()
+{
+	echo "ssh-enclave: $1" >&2
+	exit 1
+}
+
+#
+# Prints the serial number of this Mac, the label of a key unless one is given.
+#
+function serial()
+{
+	ioreg -rd1 -c IOPlatformExpertDevice |
+		awk -F'"' '/IOPlatformSerialNumber/ { print $4 }'
+}
+
+#
+# Checks that a label is one word that is safe in a file name.
+#
+function valid_label()
+{
+	case "$1" in
+		""|*[!A-Za-z0-9._-]*) return 1 ;;
+	esac
+}
+
+#
+# Prints the public key hash of the identity with a label. sc_auth prints a
+# header, then type, hash, protection and label first on each line; a label
+# is one word, so it is always the fourth.
+#
+function label_hash()
+{
+	local label="$1"
+
+	sc_auth list-ctk-identities |
+		awk -v l="$label" 'NR > 1 && $4 == l { print $2 }'
+}
+
+#
+# Prints the label of the identity with an ssh fingerprint.
+#
+function fingerprint_label()
+{
+	local fingerprint="$1"
+
+	sc_auth list-ctk-identities -t ssh |
+		awk -v fp="$fingerprint" 'NR > 1 && $2 == fp { print $4 }'
+}
+
+#
+# Prints how many identities are P-256, the only size OpenSSH can use.
+#
+function count_p256()
+{
+	sc_auth list-ctk-identities | awk 'NR > 1 && $1 ~ /^p-256/' | wc -l
+}
+
+#
+# Makes a key in the enclave, with Touch ID unless --no-touch is given, then
+# writes its stub, loads it and prints its public key.
+#
+function cmd_create()
+{
+	local protection="bio"
+
+	if [[ "${1:-}" == "--no-touch" ]]; then
+		protection="none"
+		shift
+	fi
+	local label="${1:-$(serial)}"
+
+	valid_label "$label" || fail "a label is one word of A-Z a-z 0-9 . _ -"
+	[[ -z "$(label_hash "$label")" ]] || fail "'$label' exists already"
+
+	sc_auth create-ctk-identity -l "$label" -k p-256-ne -t "$protection" ||
+		return $?
+	cmd_stubs || return $?
+	cmd_load || return $?
+	cmd_pub "$label"
+}
+
+#
+# Prints the identities in the enclave and the enclave keys in the agent.
+#
+function cmd_list()
+{
+	sc_auth list-ctk-identities -t ssh || return $?
+	echo
+	echo "In the agent:"
+	ssh-add -l 2>/dev/null | grep 'ECDSA-SK)$' || echo "  none"
+}
+
+#
+# Writes a stub, and its public key, for every key in the enclave.
+#
+function cmd_stubs()
+{
+	local tmp pub key fingerprint label found=0 total
+
+	tmp="$(mktemp -d)" || return $?
+
+	# -K asks for a PIN that the enclave does not use; an empty askpass
+	# answers it. Before FB21992630 was fixed, every key got the name
+	# id_ecdsa_sk_rk and a question whether to overwrite; /dev/null says no.
+	(cd "$tmp" && SSH_ASKPASS=/usr/bin/true SSH_ASKPASS_REQUIRE=force \
+		ssh-keygen -q -w "$provider" -K -N "" </dev/null >/dev/null 2>&1)
+
+	for pub in "$tmp"/*.pub; do
+		[[ -f "$pub" ]] || continue
+		fingerprint="$(ssh-keygen -lf "$pub" | awk '{ print $2 }')"
+		label="$(fingerprint_label "$fingerprint")"
+		if ! valid_label "$label"; then
+			echo "ssh-enclave: skipped $fingerprint: no usable label" >&2
+			continue
+		fi
+
+		# The provider leaves the comment "ssh:". Name the key as the
+		# YubiKey's is named: yubikey-<serial>, here enclave-<label>.
+		key="${pub%.pub}"
+		ssh-keygen -q -c -P "" -C "enclave-$label" -f "$key" >/dev/null ||
+			return $?
+		mv -f "$key" "$prefix$label" || return $?
+		mv -f "$pub" "$prefix$label.pub" || return $?
+		echo "$prefix$label"
+		found=$((found + 1))
+	done
+	rm -rf "$tmp"
+
+	(( found > 0 )) || fail "no keys in the enclave; make one with create"
+
+	total="$(count_p256)"
+	if (( found < total )); then
+		echo "ssh-enclave: wrote $found of $total stubs. This macOS names" \
+			"every key alike (FB21992630); a newer one writes them all." >&2
+	fi
+}
+
+#
+# Adds every stub to the agent. That needs neither PIN nor Touch ID; the
+# agent asks for Touch ID when it signs.
+#
+function cmd_load()
+{
+	local key keys=()
+
+	for key in "$prefix"*; do
+		[[ -f "$key" && "$key" != *.pub ]] && keys+=("$key")
+	done
+	(( ${#keys[@]} > 0 )) || fail "no stubs in ~/.ssh. Run: ssh-enclave stubs"
+
+	ssh-add -q -S "$provider" "${keys[@]}"
+}
+
+#
+# Prints the public key of a key.
+#
+function cmd_pub()
+{
+	local label="${1:-$(serial)}"
+
+	valid_label "$label" || fail "usage: ssh-enclave pub [label]"
+	[[ -f "$prefix$label.pub" ]] ||
+		fail "no stub for '$label'. Run: ssh-enclave stubs"
+	cat "$prefix$label.pub"
+}
+
+#
+# Removes a key from the agent, the enclave and ~/.ssh, after asking.
+#
+function cmd_delete()
+{
+	local label="${1:-}" hash answer
+
+	valid_label "$label" || fail "usage: ssh-enclave delete <label>"
+	hash="$(label_hash "$label")"
+	[[ -n "$hash" ]] || fail "no key in the enclave with the label '$label'"
+	[[ "$hash" != *$'\n'* ]] ||
+		fail "several keys have the label '$label'. Use: sc_auth delete-ctk-identity -h"
+
+	printf "Delete the key '%s' (%s)? It cannot be undone. [y/N] " \
+		"$label" "$hash"
+	read -r answer
+	[[ "$answer" == [yY] ]] || return 1
+
+	if [[ -f "$prefix$label.pub" ]]; then
+		ssh-add -d "$prefix$label.pub" >/dev/null 2>&1
+	fi
+	sc_auth delete-ctk-identity -h "$hash" || return $?
+	rm -f "$prefix$label" "$prefix$label.pub"
+	echo "Deleted '$label'. Remove its public key from authorized_keys," \
+		"allowed_signers and forges."
+}
+
+[[ "$(uname -s)" == "Darwin" ]] || fail "macOS only"
+[[ -e "$provider" ]] || fail "$provider is missing; it needs macOS 15 or newer"
+
+cmd="${1:-}"
+(( $# > 0 )) && shift
+case "$cmd" in
+	create)		cmd_create "$@" ;;
+	list)		cmd_list ;;
+	stubs)		cmd_stubs ;;
+	load)		cmd_load ;;
+	pub)		cmd_pub "$@" ;;
+	delete)		cmd_delete "$@" ;;
+	""|-h|--help|help) usage ;;
+	*)		usage >&2; exit 1 ;;
+esac

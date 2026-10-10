@@ -6,3 +6,7 @@ shell-integration-features = ssh-env,ssh-terminfo
 # Close the current split (not the whole tab) on Linux, matching macOS cmd+w.
 # Default is close_tab:this, which would kill all splits in the tab.
 keybind = ctrl+shift+w=close_surface
+
+# zmx detach: send 0x1c (ctrl+\), which is awkward to type on a Norwegian
+# layout where backslash is alt+shift+7.
+keybind = ctrl+alt+d=text:\x1c

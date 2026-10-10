@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+#
+# Installs brave/policy.json as Brave's managed policy. Run it as root:
+#
+#   sudo bin/brave-policy
+#
+# macOS: a configuration profile, com.brave.Browser.policy. macOS 15 and
+# newer no longer install one from the command line; then the profile is
+# opened in System Settings, which asks to install it.
+#
+# Linux: a link from /etc/brave/policies/managed/ to brave/policy.json, so an
+# edit in this repository is the live policy. It needs Brave from Brave's apt
+# repository: the snap ignores managed policies. See docs/brave.md.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+policy="$root/brave/policy.json"
+profile_id="com.brave.Browser.policy"
+
+#
+# Writes a configuration profile with the policies of brave/policy.json to
+# a path. Its UUIDs are fixed, so that a new install replaces the old one.
+#
+function make_profile()
+{
+	local dest="$1"
+
+	python3 - "$policy" "$dest" <<'EOF'
+import sys, json, plistlib
+
+policy_json_path, output_path = sys.argv[1], sys.argv[2]
+
+with open(policy_json_path) as f:
+    policies = json.load(f)
+
+profile = {
+    "PayloadContent": [{
+        "PayloadDescription": "Brave Browser enterprise policies",
+        "PayloadDisplayName": "Brave Browser",
+        "PayloadIdentifier": "com.brave.Browser.policy.settings",
+        "PayloadOrganization": "Local",
+        "PayloadType": "com.brave.Browser",
+        "PayloadUUID": "9E2C4A6B-8D1F-3E5A-7B9C-1D3F5A7B9E1C",
+        "PayloadVersion": 1,
+        **policies,
+    }],
+    "PayloadDescription": "Brave Browser enterprise policy",
+    "PayloadDisplayName": "Brave Browser Policy",
+    "PayloadIdentifier": "com.brave.Browser.policy",
+    "PayloadOrganization": "Local",
+    "PayloadRemovalDisallowed": False,
+    "PayloadScope": "System",
+    "PayloadType": "Configuration",
+    "PayloadUUID": "3D5A8C21-F4B2-4E9A-BC3D-7F1E2A4B6C8D",
+    "PayloadVersion": 1,
+}
+
+with open(output_path, "wb") as f:
+    plistlib.dump(profile, f, fmt=plistlib.FMT_XML)
+EOF
+}
+
+#
+# Installs the profile on macOS, or opens it in System Settings where the
+# command line cannot.
+#
+function install_macos()
+{
+	local tmp pending="$root/brave/policy-pending.mobileconfig"
+	local user="${SUDO_USER:-$(logname)}"
+
+	tmp="$(mktemp -d)" || return $?
+	make_profile "$tmp/brave.mobileconfig" || return $?
+
+	if profiles list 2>/dev/null | grep -q "$profile_id"; then
+		log "Removing the installed profile ..."
+		profiles remove -identifier "$profile_id" || return $?
+	fi
+
+	if profiles install -path "$tmp/brave.mobileconfig" 2>/dev/null; then
+		rm -rf "$tmp"
+		killall cfprefsd 2>/dev/null
+		log "Installed the profile $profile_id."
+		log "Restart Brave and check brave://policy"
+		return
+	fi
+
+	cp "$tmp/brave.mobileconfig" "$pending" && chmod 644 "$pending" ||
+		return $?
+	rm -rf "$tmp"
+	sudo -u "$user" open "$pending" || return $?
+	sleep 1
+	sudo -u "$user" open \
+		"x-apple.systempreferences:com.apple.preferences.configurationprofiles"
+	log "In System Settings, double-click 'Brave Browser Policy' to install it."
+	log "Then: rm -f '$pending', restart Brave and check brave://policy"
+}
+
+#
+# Links the policy into Brave's managed policy directory on Linux.
+#
+function install_linux()
+{
+	local dest="/etc/brave/policies/managed/brave-policy.json"
+
+	mkdir -p "${dest%/*}" || return $?
+	ln -sfn "$policy" "$dest" || return $?
+	log "Linked $dest to $policy"
+	log "Restart Brave and check brave://policy"
+}
+
+check_root || exit $?
+
+case "$(uname -s)" in
+	Darwin)	install_macos || fail "Installing the profile failed!" ;;
+	Linux)	install_linux || fail "Linking the policy failed!" ;;
+	*)	fail "Unsupported system: $(uname -s)" ;;
+esac

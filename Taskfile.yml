@@ -1,0 +1,68 @@
+version: "3"
+
+tasks:
+  # Plain "task" lists the tasks. It has no description, so it is not listed.
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  brew:
+    desc: Install Homebrew when it is missing, and the packages in Brewfile
+    silent: true
+    cmds:
+      - bin/brew-bundle
+
+  link:
+    desc: Link the dotfiles into the home directory and apply the theme in use
+    silent: true
+    cmds:
+      - bin/link
+
+  status:
+    desc: Show the links, the theme, missing packages and the ssh-agent
+    silent: true
+    cmds:
+      - bin/status
+
+  theme:
+    desc: "Switch Ghostty, VSCodium, Vim, dircolors and delta to a theme: task theme -- selenized-dark"
+    silent: true
+    cmds:
+      - local/bin/theme {{.CLI_ARGS}}
+
+  theme-preview:
+    desc: Show the prompt and ls in every theme
+    silent: true
+    cmds:
+      - bin/theme-preview {{.CLI_ARGS}}
+
+  ssh-enclave:
+    desc: "Make and load ssh keys in the Secure Enclave, on macOS: task ssh-enclave -- create"
+    silent: true
+    cmds:
+      - local/bin/ssh-enclave {{.CLI_ARGS}}
+
+  touchid:
+    desc: Let Touch ID answer sudo and the authorization dialogs, on macOS
+    silent: true
+    cmds:
+      - sudo bin/touchid
+
+  root-prompt:
+    desc: Give root shells a red prompt and background
+    silent: true
+    cmds:
+      - sudo bin/root-prompt
+
+  brave-policy:
+    desc: Install brave/policy.json as Brave's managed policy
+    silent: true
+    cmds:
+      - sudo bin/brave-policy
+
+  lint:
+    desc: Run shellcheck on the scripts and check that the JSON files parse
+    cmds:
+      - shellcheck -s bash -e SC2034,SC2154,SC1090,SC1091,SC2242 bin/* local/bin/*
+      - jq empty vscodium/settings.json brave/policy.json

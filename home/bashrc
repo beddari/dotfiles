@@ -1,7 +1,6 @@
 # Homebrew
 if [[ "$(uname)" == "Darwin" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
-    export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
     export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
 elif [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -40,7 +39,7 @@ fi
 brew() {
     command brew "$@"
     if [[ "$1" == "upgrade" ]]; then
-        local bf="$HOME/kode/dotfiles/Brewfile.$(uname)"
+        local bf="$HOME/kode/dotfiles/Brewfile"
         [[ -f "$bf" ]] && command brew bundle --file="$bf" --vscode --go
     fi
 }

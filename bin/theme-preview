@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+#
+# Shows the prompt and the output of ls in each Ghostty theme, drawn with
+# 24-bit colour, to compare how dircolors and the Starship prompt look in
+# them. A command to show in place of ls can follow:
+#
+#   bin/theme-preview git status
+#
+# It assumes bold-is-bright=false, Ghostty's default: bold text keeps
+# palette 0 to 7 with a heavier font, not palette 8 to 15.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+width="${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}"
+cmd="${*:-ls -la $root}"
+
+esc=$'\033'
+reset="${esc}[0m"
+bold="${esc}[1m"
+no_bold="${esc}[22m"
+
+#
+# Prints the escape that sets the foreground to a hex colour.
+#
+function fg()
+{
+	printf "${esc}[38;2;%d;%d;%dm" "0x${1:0:2}" "0x${1:2:2}" "0x${1:4:2}"
+}
+
+#
+# Prints the escape that sets the background to a hex colour.
+#
+function bg()
+{
+	printf "${esc}[48;2;%d;%d;%dm" "0x${1:0:2}" "0x${1:2:2}" "0x${1:4:2}"
+}
+
+#
+# Prints a line on the theme's background, filled to the terminal's width.
+#
+function emit()
+{
+	printf '%s%*s\r%s%s\n' "$BG" "$width" "" "$1" "$reset"
+}
+
+for file in "$root"/ghostty/themes/*; do
+	name="${file##*/}"
+	pal=() back="" fore=""
+	while IFS= read -r line; do
+		line="${line//$'\r'/}"
+		[[ "$line" =~ ^palette\ =\ ([0-9]+)=#(.*) ]] &&
+			pal[BASH_REMATCH[1]]="${BASH_REMATCH[2]}"
+		[[ "$line" =~ ^background\ =\ \#(.*) ]] && back="${BASH_REMATCH[1]}"
+		[[ "$line" =~ ^foreground\ =\ \#(.*) ]] && fore="${BASH_REMATCH[1]}"
+	done < "$file"
+
+	case "$name" in
+		*light*|*day*)	variant="light" ;;
+		*)		variant="dark" ;;
+	esac
+
+	BG="$(bg "$back")"
+	FG="$(fg "$fore")"
+
+	# dircolors: bold on dark, normal weight on light.
+	if [[ "$variant" == "dark" ]]; then
+		dir="${bold}$(fg "${pal[4]}")"		# directories: blue
+		exe="${bold}$(fg "${pal[2]}")"		# executables: green
+	else
+		dir="$(fg "${pal[4]}")"
+		exe="$(fg "${pal[2]}")"
+	fi
+	plain="${no_bold}${FG}"
+
+	# Starship's named colours, as palette entries.
+	cyan="$(fg "${pal[6]}")"	# the directory
+	magenta="$(fg "${pal[5]}")"	# the git branch and the prompt character
+	yellow="$(fg "${pal[3]}")"	# the git status
+
+	prompt=" ${cyan}~/kode/dotfiles ${magenta}main ${yellow}! ${magenta}❯${FG}"
+
+	printf "%s\n  %s── %s (%s) ──%s\n" "$reset" "$bold" "$name" "$variant" \
+		"$reset"
+	emit ""
+	emit "$prompt $cmd"
+
+	eval "$cmd" 2>&1 | while IFS= read -r l; do
+		case "$l" in
+			total*)	emit " $FG$l" ;;
+			d*)	emit " $FG${l% *} $dir${l##* }$plain" ;;
+			*x*)	emit " $FG${l% *} $exe${l##* }$plain" ;;
+			*)	emit " $FG$l" ;;
+		esac
+	done
+
+	emit "$prompt "
+	emit ""
+done
+
+printf "%s\n" "$reset"

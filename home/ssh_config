@@ -1,6 +1,3 @@
-  Host mio.local
-    HostName mio.local
-
 Host *
     AddKeysToAgent yes
 

@@ -18,7 +18,6 @@
 [github]
   user = beddari
 [gpg]
-  program = gpg
   format = ssh
 [help]
   autocorrect = 1
@@ -41,4 +40,8 @@
   name = Jan Ivar Beddari
   email = code@beddari.net
 [gpg "ssh"]
-  defaultKeyCommand = sh -c \"ssh-add -L | sed s/^/key::/ | head -1\"
+  # Sign with the YubiKey: the first ed25519-sk key in the agent. Keys in the
+  # Secure Enclave are ecdsa-sk, so they never sign. With no such key in the
+  # agent, signing fails; ssh-add the YubiKey's key.
+  defaultKeyCommand = sh -c \"ssh-add -L | grep ^sk-ssh-ed25519@openssh.com | head -1 | sed s/^/key::/\"
+  allowedSignersFile = ~/.config/git/allowed_signers

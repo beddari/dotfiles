@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# Shows whether each link is in place, the theme in use, whether every
+# package in Brewfile is installed and, on macOS, the ssh-agent and its keys.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+#
+# Prints one line per link: ok, missing, or the other file it points at.
+#
+function print_links()
+{
+	local src dest state
+
+	log "Links:"
+	while read -r src dest; do
+		if [[ "$(readlink "$dest" 2>/dev/null)" == "$root/$src" ]]; then
+			state="ok"
+		elif [[ -L "$dest" ]]; then
+			state="-> $(readlink "$dest")"
+		elif [[ -e "$dest" ]]; then
+			state="not a link"
+		else
+			state="missing"
+		fi
+		printf "  %-48s %s\n" "${dest/#$HOME/~}" "$state"
+	done < <(links)
+}
+
+#
+# Prints the theme that local/bin/theme set last.
+#
+function print_theme()
+{
+	local link
+
+	link="$(readlink "$HOME/.config/delta-theme.gitconfig" 2>/dev/null)"
+	link="${link##*/delta-}"
+	log "Theme: ${link%.gitconfig}"
+}
+
+#
+# Prints whether the packages in Brewfile are installed.
+#
+function print_packages()
+{
+	if brew bundle check --file="$root/Brewfile" >/dev/null 2>&1; then
+		log "Packages: all installed"
+	else
+		log "Packages: some are missing. Run: task brew"
+	fi
+}
+
+#
+# Prints the state of the ssh-agent LaunchAgent, whether apps started by
+# launchd use it, and the keys it holds.
+#
+function print_ssh_agent()
+{
+	local state
+
+	state="$(launchctl print "gui/$(id -u)/com.brew.ssh-agent" 2>/dev/null |
+		awk '$1 == "state" { print $3; exit }')"
+	log "ssh-agent: ${state:-not loaded. Run: task link}"
+	if [[ "$(launchctl getenv SSH_AUTH_SOCK)" == "$HOME/.ssh/agent.sock" ]]; then
+		echo "  Apps opened from the Dock use it."
+	else
+		echo "  Apps opened from the Dock use another agent. Run: task link"
+	fi
+	SSH_AUTH_SOCK="$HOME/.ssh/agent.sock" ssh-add -l 2>&1 | sed 's/^/  /'
+}
+
+print_links
+print_theme
+print_packages
+[[ "$(uname -s)" == "Darwin" ]] && print_ssh_agent
+exit 0

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# Installs Homebrew when it is missing, then the packages in Brewfile. On a
+# new computer it is the first step, run as bin/brew-bundle: it installs
+# task, which runs the rest.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+#
+# Prints where Homebrew installs itself on this platform.
+#
+function brew_prefix()
+{
+	case "$(uname -s)" in
+		Darwin)	echo "/opt/homebrew" ;;
+		Linux)	echo "/home/linuxbrew/.linuxbrew" ;;
+		*)	return 1 ;;
+	esac
+}
+
+if ! command -v brew >/dev/null; then
+	log "Installing Homebrew ..."
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" ||
+		fail "Installing Homebrew failed!"
+
+	# A new install is not on PATH until the shell starts again.
+	eval "$("$(brew_prefix)/bin/brew" shellenv)" ||
+		fail "Homebrew is not in $(brew_prefix)!"
+fi
+
+log "Installing the packages in Brewfile ..."
+brew bundle --file="$root/Brewfile" || fail "brew bundle failed!"

@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# Links the dotfiles into the home directory, merges the VSCodium settings,
+# and applies the theme in use, or solarized-osaka-dark on the first run. On
+# macOS it also sets a few defaults and installs the ssh-agent LaunchAgent.
+#
+# It can run again: a link is replaced by one to this repository, and a link
+# to a file that this repository no longer has is removed.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+agent_plist="$HOME/Library/LaunchAgents/com.brew.ssh-agent.plist"
+
+#
+# Makes the links that functions.sh lists. ~/.vim/colors was a directory of
+# links before it became one link, and is replaced.
+#
+function make_links()
+{
+	local src dest
+
+	if [[ -d "$HOME/.vim/colors" && ! -L "$HOME/.vim/colors" ]]; then
+		rm -rf "$HOME/.vim/colors" || return $?
+	fi
+
+	while read -r src dest; do
+		mkdir -p "${dest%/*}" || return $?
+		ln -sfn "$root/$src" "$dest" || return $?
+	done < <(links)
+}
+
+#
+# Removes the links in the usual places that point into this repository at
+# a file that is gone, such as those left behind by a file that moved.
+#
+function prune_links()
+{
+	local dir link
+
+	for dir in "$HOME" "$HOME/.config" "$HOME/.local/bin" "$vscodium_ext"; do
+		[[ -d "$dir" ]] || continue
+		for link in "$dir"/* "$dir"/.[!.]*; do
+			[[ -L "$link" && ! -e "$link" ]] || continue
+			[[ "$(readlink "$link")" == "$root"/* ]] || continue
+			rm -f "$link" && log "Removed the stale link $link"
+		done
+	done
+}
+
+#
+# Merges vscodium/settings.json into the VSCodium user settings. The file in
+# this repository wins; keys it does not have are kept.
+#
+function merge_vscodium_settings()
+{
+	local settings="$vscodium_dir/settings.json"
+
+	mkdir -p "$vscodium_dir" || return $?
+	if [[ ! -f "$settings" ]]; then
+		cp "$root/vscodium/settings.json" "$settings"
+		return
+	fi
+
+	jq -s '.[0] * .[1]' "$settings" "$root/vscodium/settings.json" \
+		> "$settings.tmp" || return $?
+	mv "$settings.tmp" "$settings"
+}
+
+#
+# Prints the theme in use, from the link that local/bin/theme made. The link
+# may point at a file that moved; only its name counts.
+#
+function current_theme()
+{
+	local link
+
+	link="$(readlink "$HOME/.config/delta-theme.gitconfig" 2>/dev/null)" ||
+		return 0
+	link="${link##*/delta-}"
+	echo "${link%.gitconfig}"
+}
+
+#
+# Sets the macOS defaults: no margins between tiled windows, and tap to click.
+#
+function set_macos_defaults()
+{
+	defaults write com.apple.WindowManager EnableTiledWindowMargins \
+		-bool false || return $?
+	defaults write com.apple.AppleMultitouchTrackpad Clicking \
+		-bool true || return $?
+	defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad \
+		Clicking -bool true || return $?
+}
+
+#
+# Installs the LaunchAgent that runs Homebrew's ssh-agent, and starts it. It
+# is left alone when it is installed and running already: a restart would
+# drop the keys in the agent.
+#
+function install_ssh_agent()
+{
+	local service
+
+	service="gui/$(id -u)/com.brew.ssh-agent"
+
+	if cmp -s "$root/macos/com.brew.ssh-agent.plist" "$agent_plist" &&
+	   launchctl print "$service" >/dev/null 2>&1; then
+		return
+	fi
+
+	log "Installing and starting the ssh-agent LaunchAgent ..."
+	launchctl bootout "$service" 2>/dev/null
+	mkdir -p "${agent_plist%/*}" || return $?
+	cp -f "$root/macos/com.brew.ssh-agent.plist" "$agent_plist" || return $?
+	launchctl bootstrap "gui/$(id -u)" "$agent_plist" || return $?
+}
+
+# Read before prune_links, which removes the link when its file has moved.
+theme="$(current_theme)"
+
+log "Linking the dotfiles into $HOME ..."
+make_links || fail "Linking failed!"
+prune_links
+
+chmod 700 "$HOME/.ssh" || fail "Setting the mode of ~/.ssh failed!"
+
+merge_vscodium_settings || fail "Merging the VSCodium settings failed!"
+
+"$root/local/bin/theme" "${theme:-solarized-osaka-dark}" ||
+	fail "Applying the theme failed!"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+	set_macos_defaults || fail "Setting the macOS defaults failed!"
+	install_ssh_agent  || fail "Starting the ssh-agent LaunchAgent failed!"
+fi

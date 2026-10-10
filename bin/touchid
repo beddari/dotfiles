@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# Lets Touch ID answer sudo in the terminal and the authorization dialogs of
+# macOS. Run it as root:
+#
+#   sudo bin/touchid
+#
+# sudo: /etc/pam.d/sudo_local, which macOS 14 and newer include and keep
+# across updates.
+#
+# Dialogs: pam_localauthentication.so goes first in /etc/pam.d/authorization.
+# macOS owns that file and may reset it at a major upgrade; run this again
+# when the dialogs stop taking Touch ID.
+#
+# Without Touch ID, such as over ssh, both ask for the password.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+sudo_local="/etc/pam.d/sudo_local"
+authorization="/etc/pam.d/authorization"
+
+#
+# Tells whether sudo takes Touch ID.
+#
+function sudo_has_touchid()
+{
+	grep -qF "pam_tid.so" "$sudo_local" 2>/dev/null
+}
+
+#
+# Tells whether the authorization dialogs take Touch ID.
+#
+function dialogs_have_touchid()
+{
+	grep -qF "pam_localauthentication.so" "$authorization" 2>/dev/null
+}
+
+#
+# Writes /etc/pam.d/sudo_local.
+#
+function install_sudo_touchid()
+{
+	cat > "$sudo_local" <<'EOF'
+# sudo_local: local config file which survives system updates and is included
+# for sudo PAM configuration on macOS 14 Sonoma and later.
+auth       sufficient     pam_tid.so
+EOF
+}
+
+#
+# Puts pam_localauthentication.so before the first auth line of
+# /etc/pam.d/authorization.
+#
+function install_dialogs_touchid()
+{
+	awk 'BEGIN { line = "auth       sufficient     pam_localauthentication.so" }
+	     !done && /^auth/ { print line; done = 1 }
+	     { print }' "$authorization" > "$authorization.tmp" || return $?
+	cat "$authorization.tmp" > "$authorization" || return $?
+	rm -f "$authorization.tmp"
+}
+
+[[ "$(uname -s)" == "Darwin" ]] || fail "Touch ID is for macOS only!"
+check_root || exit $?
+
+if sudo_has_touchid; then
+	log "sudo takes Touch ID already."
+else
+	install_sudo_touchid || fail "Writing $sudo_local failed!"
+	log "sudo takes Touch ID."
+fi
+
+if dialogs_have_touchid; then
+	log "The authorization dialogs take Touch ID already."
+else
+	install_dialogs_touchid || fail "Changing $authorization failed!"
+	log "The authorization dialogs take Touch ID."
+fi
