@@ -27,7 +27,7 @@ You need git and curl. On Ubuntu, install VSCodium from
 extensions; Homebrew has it for macOS only.
 
 ```sh
-git clone https://codeberg.org/beddari/dotfiles ~/kode/dotfiles
+git clone https://git.dataverket.org/beddari/dotfiles ~/kode/dotfiles
 cd ~/kode/dotfiles
 bin/brew-bundle     # Homebrew and the packages, task among them
 task link           # link the files and apply the theme
