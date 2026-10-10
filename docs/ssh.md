@@ -61,13 +61,26 @@ host, so an agent there can type into them. Ctrl-C ends the forward.
 
 ## Signing with git
 
-Commits and tags are signed with the YubiKey key in the agent, on both
-computers. Enclave keys sign only when named:
-`git -c user.signingkey="key::$(ssh-enclave pub)" commit`
+| Computer | Signs with | Set in |
+|---|---|---|
+| Mac | Enclave key | `~/.gitconfig.local` |
+| Ubuntu | YubiKey key in the agent | `home/gitconfig` |
+
+Set up a Mac:
+
+```sh
+git config --file ~/.gitconfig.local user.signingkey \
+	"key::$(ssh-enclave pub | cut -d' ' -f1,2)"
+echo "code@beddari.net namespaces=\"git\" $(ssh-enclave pub | cut -d' ' -f1,2)" \
+	>> ~/.config/git/allowed_signers
+```
+
+Add the same public key on the forge as a signing key.
 
 | Symptom | Fix |
 |---|---|
-| `defaultKeyCommand ... returned no keys` | `ssh-add ~/.ssh/id_yubikey_<serial>` |
+| Mac: signing fails, key not in agent | `ssh-enclave load` |
+| Ubuntu: `defaultKeyCommand ... returned no keys` | `ssh-add ~/.ssh/id_yubikey_<serial>` |
 | `git log --show-signature` says no principal matched | Add the key to `allowed_signers`, below |
 | No YubiKey stub on a computer | Copy `~/.ssh/id_yubikey_<serial>{,.pub}` from the other |
 

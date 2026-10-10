@@ -9,7 +9,8 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
 - zsh and bash with the [Starship](https://starship.rs) prompt; zsh history
   shared between shells, kept 21 days.
 - Four themes across Ghostty, VSCodium, Vim, dircolors and delta, one command.
-- git commits and tags signed with the YubiKey.
+- git commits and tags signed: the enclave key on the Mac, the YubiKey on
+  Ubuntu.
 - [Ghostty](https://ghostty.org) and [VSCodium](https://vscodium.com),
   configured.
 - Mac: Homebrew's `ssh-agent` for shells and apps, ssh keys in the Secure
