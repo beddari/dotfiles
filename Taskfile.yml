@@ -56,7 +56,7 @@ tasks:
       - sudo bin/root-prompt
 
   brave-policy:
-    desc: Install brave/policy.json as Brave's managed policy
+    desc: Install brave/policy.json as Brave's managed policy, on macOS
     silent: true
     cmds:
       - sudo bin/brave-policy

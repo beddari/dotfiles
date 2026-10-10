@@ -14,7 +14,8 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
   configured.
 - Mac: Homebrew's `ssh-agent` for shells and apps, ssh keys in the Secure
   Enclave, Touch ID for `sudo`.
-- Brave without Rewards, Wallet, VPN, AI chat, News or password manager.
+- Brave on the Mac without Rewards, Wallet, VPN, AI chat, News or password
+  manager; Brave Origin on Ubuntu.
 
 ## Set up a new computer
 
@@ -44,7 +45,7 @@ Open a new shell. To push, switch the remote to ssh:
 | `task ssh-enclave -- <command>` | Secure Enclave keys made and loaded (Mac) |
 | `task touchid` | Touch ID for `sudo` and auth dialogs (Mac, sudo) |
 | `task root-prompt` | Red prompt in root shells (sudo) |
-| `task brave-policy` | Brave policy installed (sudo) |
+| `task brave-policy` | Brave policy installed (Mac, sudo) |
 | `task lint` | shellcheck and JSON checks pass |
 
 `theme` and `ssh-enclave` also work from anywhere, from `~/.local/bin`.

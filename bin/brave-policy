@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 #
-# Installs brave/policy.json as Brave's managed policy. Run it as root:
+# Installs brave/policy.json as Brave's managed policy on macOS, as the
+# configuration profile com.brave.Browser.policy. Run it as root:
 #
 #   sudo bin/brave-policy
 #
-# macOS: a configuration profile, com.brave.Browser.policy. macOS 15 and
-# newer no longer install one from the command line; then the profile is
-# opened in System Settings, which asks to install it.
-#
-# Linux: a link from /etc/brave/policies/managed/ to brave/policy.json, so an
-# edit in this repository is the live policy. It needs Brave from Brave's apt
-# repository: the snap ignores managed policies. See docs/system.md.
+# macOS 15 and newer no longer install a profile from the command line; then
+# it is opened in System Settings, which asks to install it. Ubuntu uses Brave
+# Origin and needs no policy.
 #
 
 source "${0%/*}/functions.sh" || exit $?
@@ -103,23 +100,7 @@ function install_macos()
 	log "Then: rm -f '$pending', restart Brave and check brave://policy"
 }
 
-#
-# Links the policy into Brave's managed policy directory on Linux.
-#
-function install_linux()
-{
-	local dest="/etc/brave/policies/managed/brave-policy.json"
-
-	mkdir -p "${dest%/*}" || return $?
-	ln -sfn "$policy" "$dest" || return $?
-	log "Linked $dest to $policy"
-	log "Restart Brave and check brave://policy"
-}
-
+[[ "$(uname -s)" == "Darwin" ]] || fail "The Brave policy is for macOS only!"
 check_root || exit $?
 
-case "$(uname -s)" in
-	Darwin)	install_macos || fail "Installing the profile failed!" ;;
-	Linux)	install_linux || fail "Linking the policy failed!" ;;
-	*)	fail "Unsupported system: $(uname -s)" ;;
-esac
+install_macos || fail "Installing the profile failed!"
