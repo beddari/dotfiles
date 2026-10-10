@@ -1,31 +1,7 @@
-# Homebrew
-if [[ "$(uname)" == "Darwin" ]]; then
-    [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
+source "${${(%):-%x}:A:h}/shellrc"
 
-export PATH="$HOME/.local/bin:$HOME/go/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
-
-export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-
-# Environment
-if [[ "$(uname)" == "Darwin" ]]; then
-    # No SSH_SK_PROVIDER: it would hide the YubiKey. Secure Enclave keys get
-    # their provider per key from `ssh-enclave load` instead.
-    export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-    # The agent forgets enclave keys on restart; re-adding needs no touch.
-    if command -v ssh-enclave >/dev/null &&
-        ! ssh-add -l 2>/dev/null | grep -q 'ECDSA-SK)$'; then
-        ssh-enclave load 2>/dev/null
-    fi
-    # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
-    bindkey -s '\xc2\xa0' ' '
-    # Set config folder for e.g sops
-    export XDG_CONFIG_HOME="$HOME/.config"
-fi
-export EDITOR=vim
-export LESS='-FRXx4'
+# Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space
+[[ "$(uname)" == "Darwin" ]] && bindkey -s '\xc2\xa0' ' '
 
 # History
 HISTFILE=~/.histfile
@@ -51,6 +27,7 @@ bindkey -M viins '^U' kill-whole-line
 bindkey -M viins '^W' backward-kill-word
 
 # Keep only recent timestamped history entries in HISTFILE.
+zmodload zsh/datetime    # EPOCHSECONDS
 _prune_history_file() {
     [[ -s "$HISTFILE" ]] || return 0
 
@@ -74,14 +51,11 @@ _prune_history_file() {
 
     cutoff=$(( EPOCHSECONDS - HISTORY_RETENTION_DAYS * 86400 ))
 
+    # ": <start>:<elapsed>;<command>" starts an entry; the lines that follow
+    # it, for a command over several lines, go with it.
     if awk -v cutoff="$cutoff" '
-        /^: [0-9]+:[0-9]+;/ {
-            if (match($0, /^: ([0-9]+):[0-9]+;/, m) && m[1] >= cutoff) {
-                print
-            }
-            next
-        }
-        { print }
+        /^: [0-9]+:[0-9]+;/ { split($2, t, ":"); old = (t[1] < cutoff) }
+        !old
     ' "$HISTFILE" > "$tmp_file"; then
         mv "$tmp_file" "$HISTFILE"
         print -r -- "$EPOCHSECONDS" > "$prune_state_file"
@@ -108,17 +82,6 @@ function _set_window_title() {
     fi
 }
 precmd_functions+=(_set_window_title)
-
-# Dircolors
-if [[ -f ~/.dircolors ]]; then
-    if command -v gdircolors &>/dev/null; then
-        eval "$(gdircolors ~/.dircolors)"
-        alias ls='gls --color=auto'
-    elif command -v dircolors &>/dev/null; then
-        eval "$(dircolors ~/.dircolors)"
-        alias ls='ls --color=auto'
-    fi
-fi
 
 # Completions
 if command -v brew &>/dev/null; then
@@ -167,8 +130,4 @@ function zmx-portal() {
     ssh -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes $forwards "$host"
 }
 
-# Install local TERM terminfo on a remote host
-function terminfo-install() {
-    infocmp "$TERM" | ssh "$@" -- tic -x -
-}
 compdef terminfo-install=ssh

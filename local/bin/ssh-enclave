@@ -10,7 +10,7 @@
 #
 # The provider is given per key, with ssh-add -S, and not as SSH_SK_PROVIDER:
 # ssh-agent remembers which provider added a key, so keys in the enclave and
-# on a YubiKey work side by side. docs/ssh.md has the reasons.
+# on a YubiKey work side by side. Usage: docs/ssh.md.
 #
 
 provider="/usr/lib/ssh-keychain.dylib"

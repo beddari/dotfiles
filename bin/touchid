@@ -37,10 +37,27 @@ function dialogs_have_touchid()
 }
 
 #
-# Writes /etc/pam.d/sudo_local.
+# Copies a file to <file>.<date and time>.bak, keeping its mode and owner.
+#
+function backup()
+{
+	local file="$1"
+	local bak
+
+	bak="$file.$(date +%Y%m%d-%H%M%S).bak"
+
+	cp -p "$file" "$bak" || return $?
+	log "Saved a copy of $file as $bak"
+}
+
+#
+# Writes /etc/pam.d/sudo_local, after a backup of the file it replaces.
 #
 function install_sudo_touchid()
 {
+	if [[ -f "$sudo_local" ]]; then
+		backup "$sudo_local" || return $?
+	fi
 	cat > "$sudo_local" <<'EOF'
 # sudo_local: local config file which survives system updates and is included
 # for sudo PAM configuration on macOS 14 Sonoma and later.
@@ -50,10 +67,11 @@ EOF
 
 #
 # Puts pam_localauthentication.so before the first auth line of
-# /etc/pam.d/authorization.
+# /etc/pam.d/authorization, after a backup of it.
 #
 function install_dialogs_touchid()
 {
+	backup "$authorization" || return $?
 	awk 'BEGIN { line = "auth       sufficient     pam_localauthentication.so" }
 	     !done && /^auth/ { print line; done = 1 }
 	     { print }' "$authorization" > "$authorization.tmp" || return $?

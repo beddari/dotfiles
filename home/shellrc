@@ -1,0 +1,45 @@
+# What zshrc and bashrc share. Both source it from this repository.
+
+# Homebrew
+if [[ "$(uname)" == "Darwin" ]]; then
+    [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+export PATH="$HOME/.local/bin:$HOME/go/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+
+# Environment
+export EDITOR=vim
+export LESS='-FRXx4'
+export NODE_OPTIONS="--no-deprecation"
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    # Set config folder for e.g sops
+    export XDG_CONFIG_HOME="$HOME/.config"
+    # No SSH_SK_PROVIDER: it would hide the YubiKey. Secure Enclave keys get
+    # their provider per key from `ssh-enclave load` instead.
+    export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+    # The agent forgets enclave keys on restart; re-adding needs no touch.
+    if command -v ssh-enclave >/dev/null &&
+        ! ssh-add -l 2>/dev/null | grep -q 'ECDSA-SK)$'; then
+        ssh-enclave load 2>/dev/null
+    fi
+fi
+
+# Dircolors
+if [[ -f ~/.dircolors ]]; then
+    if command -v gdircolors &>/dev/null; then
+        eval "$(gdircolors ~/.dircolors)"
+        alias ls='gls --color=auto'
+    elif command -v dircolors &>/dev/null; then
+        eval "$(dircolors ~/.dircolors)"
+        alias ls='ls --color=auto'
+    fi
+fi
+
+# Install local TERM terminfo on a remote host
+terminfo-install() {
+    infocmp "$TERM" | ssh "$@" -- tic -x -
+}

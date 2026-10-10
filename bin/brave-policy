@@ -10,7 +10,7 @@
 #
 # Linux: a link from /etc/brave/policies/managed/ to brave/policy.json, so an
 # edit in this repository is the live policy. It needs Brave from Brave's apt
-# repository: the snap ignores managed policies. See docs/brave.md.
+# repository: the snap ignores managed policies. See docs/system.md.
 #
 
 source "${0%/*}/functions.sh" || exit $?
@@ -86,6 +86,12 @@ function install_macos()
 		return
 	fi
 
+	# Root writes here, in a directory the user owns: refuse a symlink put
+	# in its place, which would make root overwrite the file it points at.
+	if [[ -L "$pending" ]]; then
+		error "$pending is a symlink; remove it and run again."
+		return 1
+	fi
 	cp "$tmp/brave.mobileconfig" "$pending" && chmod 644 "$pending" ||
 		return $?
 	rm -rf "$tmp"

@@ -1,102 +1,78 @@
 # dotfiles
 
-The shell, editor, terminal and system settings of two computers: a Mac and
-an Ubuntu 24.04 workstation. [Homebrew](https://brew.sh) installs the tools
-on both, and [Task](https://taskfile.dev) links the files into the home
-directory.
+Shell, editor, terminal and system settings for a Mac and an Ubuntu 24.04
+workstation. [Homebrew](https://brew.sh) installs the tools,
+[Task](https://taskfile.dev) links the files into `$HOME`.
 
 ## What you get
 
-- zsh with Homebrew, a history shared between shells and kept for 21 days,
-  and the [Starship](https://starship.rs) prompt. bash has the same basics.
-- Four themes, each one for Ghostty, VSCodium, Vim, dircolors and delta at
-  once, switched with one command.
-- git with commits and tags signed by an ssh key in the agent, and delta as
-  its pager.
+- zsh and bash with the [Starship](https://starship.rs) prompt; zsh history
+  shared between shells, kept 21 days.
+- Four themes across Ghostty, VSCodium, Vim, dircolors and delta, one command.
+- git commits and tags signed with the YubiKey.
 - [Ghostty](https://ghostty.org) and [VSCodium](https://vscodium.com),
-  configured, with the VSCodium extensions from Open VSX.
-- On the Mac: Homebrew's `ssh-agent` started by launchd, ssh keys in the
-  Secure Enclave beside the YubiKey, and Touch ID for `sudo`.
-- Brave with its own policy: no Rewards, Wallet, VPN, AI chat, News, or
-  password manager.
+  configured.
+- Mac: Homebrew's `ssh-agent` for shells and apps, ssh keys in the Secure
+  Enclave, Touch ID for `sudo`.
+- Brave without Rewards, Wallet, VPN, AI chat, News or password manager.
 
-## On a new computer
+## Set up a new computer
 
-You need git and curl. On Ubuntu, install VSCodium from
-[its apt repository](https://vscodium.com/#install) first if you want the
-extensions; Homebrew has it for macOS only.
+On Ubuntu, first install VSCodium from
+[its apt repository](https://vscodium.com/#install).
 
 ```sh
 git clone https://git.dataverket.org/beddari/dotfiles ~/kode/dotfiles
 cd ~/kode/dotfiles
 bin/brew-bundle     # Homebrew and the packages, task among them
-task link           # link the files and apply the theme
-task status         # check that each link is in place
+task link           # link the files, apply the theme
+task status         # every link should say ok
 ```
 
-Then open a new shell. `task link` can run again at any time: it puts back
-each link, removes those to files that have moved, and keeps the theme.
+Open a new shell. To push, switch the remote to ssh:
+`git remote set-url origin ssh://git@git.dataverket.org/beddari/dotfiles.git`
 
 ## Tasks
 
-| Task | What it does |
+| Task | Result |
 |---|---|
-| `task brew` | Install Homebrew when it is missing, and the packages in `Brewfile` |
-| `task link` | Link the dotfiles into the home directory and apply the theme in use |
-| `task status` | Show each link, the theme, missing packages and, on the Mac, the ssh-agent |
-| `task theme -- <name>` | Switch to a theme; `task theme` alone lists them |
-| `task theme-preview` | Show the prompt and `ls` in every theme |
-| `task ssh-enclave -- <command>` | Make and load ssh keys in the Secure Enclave, on macOS; `task ssh-enclave` alone lists the commands. [docs/ssh.md](docs/ssh.md) |
-| `task touchid` | Let Touch ID answer `sudo` and the authorization dialogs, on macOS |
-| `task root-prompt` | Give root shells a red prompt and a dark red background |
-| `task brave-policy` | Install `brave/policy.json` as Brave's managed policy |
-| `task lint` | Run shellcheck on the scripts and check the JSON files |
+| `task brew` | Packages in `Brewfile` installed |
+| `task link` | Links in place, theme applied; safe to rerun |
+| `task status` | Links, theme, missing packages, ssh-agent and its keys |
+| `task theme -- <name>` | Every tool switched to the theme |
+| `task theme-preview` | Prompt and `ls` shown in every theme |
+| `task ssh-enclave -- <command>` | Secure Enclave keys made and loaded (Mac) |
+| `task touchid` | Touch ID for `sudo` and auth dialogs (Mac, sudo) |
+| `task root-prompt` | Red prompt in root shells (sudo) |
+| `task brave-policy` | Brave policy installed (sudo) |
+| `task lint` | shellcheck and JSON checks pass |
 
-The last three change the system and run with `sudo`. The others change only
-your home directory.
+`theme` and `ssh-enclave` also work from anywhere, from `~/.local/bin`.
 
-`task link` also puts two commands in `~/.local/bin`, for use anywhere:
+## Per-computer settings
 
-| Command | What it does |
+| File | For |
 |---|---|
-| `theme <name>` | The same as `task theme` |
-| `ssh-enclave <command>` | The same as `task ssh-enclave` |
+| `~/.gitconfig.local` | git |
+| `~/.config/ghostty/config.local` | Ghostty |
+| `~/.ssh/config.d/*` | ssh hosts |
+| `~/.config/git/allowed_signers` | verifying signed commits |
 
-## Local to one computer
-
-What differs between the two computers goes in files that git ignores, or
-that live outside this repository:
-
-| File | Read by |
-|---|---|
-| `~/.gitconfig.local` | git, included by `home/gitconfig` |
-| `~/.config/ghostty/config.local` | Ghostty, after `ghostty/config` |
-| `~/.ssh/config.d/*` | ssh, included by `home/ssh_config` |
-| `~/.config/git/allowed_signers` | git, to verify ssh signatures |
-
-## How it is built
+## Layout
 
 ```
-Taskfile.yml        the tasks; each one calls a script in bin/
-Brewfile            the packages, for both computers; OS.mac? marks the Mac's
-bin/                one script per task, and functions.sh that they share
-local/bin/          the commands that task link puts in ~/.local/bin
-home/               shell, git, ssh and Starship, linked into ~ and ~/.config
-vim/                vimrc and the four colorschemes
-ghostty/            linked as ~/.config/ghostty, with the four palettes
-vscodium/           settings, keybindings and two theme extensions
-themes/             delta and dircolors, one file per theme
-brave/policy.json   Brave's managed policy
-macos/              the LaunchAgent for Homebrew's ssh-agent
-docs/               the details
+Taskfile.yml   tasks; each calls a script in bin/
+Brewfile       packages for both computers
+bin/           task scripts; functions.sh lists every link
+local/bin/     theme, ssh-enclave
+home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
+vim/ ghostty/ vscodium/ themes/ brave/ macos/    tool configs
+docs/          the docs below
 ```
 
-`bin/functions.sh` lists every link that `task link` makes, and `task status`
-checks the same list.
-
-| Document | Content |
+| Doc | Covers |
 |---|---|
-| [docs/ssh.md](docs/ssh.md) | The ssh-agent, keys in the Secure Enclave, the YubiKey, git signing |
-| [docs/themes.md](docs/themes.md) | The four themes and how a switch reaches each tool |
-| [docs/vscodium.md](docs/vscodium.md) | Paths, settings, Open VSX, and VSCodium on Ubuntu |
-| [docs/system.md](docs/system.md) | Touch ID, the root prompt and the Brave policy |
+| [docs/ssh.md](docs/ssh.md) | Agent, Secure Enclave keys, YubiKey, git signing |
+| [docs/themes.md](docs/themes.md) | Themes |
+| [docs/vscodium.md](docs/vscodium.md) | VSCodium |
+| [docs/system.md](docs/system.md) | Touch ID, root prompt, Brave policy |
