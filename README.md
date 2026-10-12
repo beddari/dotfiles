@@ -32,11 +32,9 @@ task status         # every link should say ok
 
 On Ubuntu, then `task apt-repos` and `sudo apt install codium`.
 
-Open a new shell. Pulls use https; to push, give the remote an ssh push url:
-
-```sh
-git remote set-url --push origin ssh://git@git.dataverket.org/beddari/dotfiles.git
-```
+Open a new shell. Repositories on git.dataverket.org fetch over https and
+push over ssh whichever url they were cloned with; `.gitconfig` rewrites
+them.
 
 ## Tasks
 

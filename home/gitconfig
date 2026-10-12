@@ -36,6 +36,14 @@
   autoStash = true
 [tag]
   forceSignAnnotated = true
+[url "https://git.dataverket.org/"]
+  # Fetch over https and push over ssh, whichever url a clone was made with.
+  # The last rule looks idle but is needed: without it an ssh clone has no
+  # push rule of its own, and insteadOf would send its pushes to https.
+  insteadOf = ssh://git@git.dataverket.org/
+[url "ssh://git@git.dataverket.org/"]
+  pushInsteadOf = https://git.dataverket.org/
+  pushInsteadOf = ssh://git@git.dataverket.org/
 [user]
   name = Jan Ivar Beddari
   email = code@beddari.net
