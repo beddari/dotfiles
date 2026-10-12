@@ -55,6 +55,12 @@ tasks:
     cmds:
       - sudo bin/root-prompt
 
+  yubikey-sudo:
+    desc: Let a touch of the YubiKey answer sudo, the password as fallback, on Ubuntu
+    silent: true
+    cmds:
+      - sudo bin/yubikey-sudo
+
   brave-policy:
     desc: Install brave/policy.json as Brave's managed policy, on macOS
     silent: true

@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+#
+# Lets a touch of the YubiKey answer sudo on Ubuntu, with the password as
+# the fallback: no key plugged in, no touch in time, or over ssh. Run it as
+# root:
+#
+#   sudo bin/yubikey-sudo
+#
+# pam_u2f goes before the password stack in /etc/pam.d/sudo and sudo-i, the
+# service of sudo -i, as sufficient.
+# The key is registered once, with pamu2fcfg, into yubikey/u2f_keys: a key
+# handle and a public key, nothing secret. Commit it, and a new computer
+# needs no touch to register. The origin is fixed, pam://dotfiles, so that
+# the registration is not tied to a hostname. /etc/Yubico/u2f_keys is a
+# root-owned copy of it, so that no user can register a key of their own
+# and sudo with a touch.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+origin="pam://dotfiles"
+keys="$root/yubikey/u2f_keys"
+authfile="/etc/Yubico/u2f_keys"
+pam_files="/etc/pam.d/sudo /etc/pam.d/sudo-i"
+pam_line="auth	sufficient	pam_u2f.so cue origin=$origin appid=$origin"
+pam_line="$pam_line authfile=$authfile"
+user="${SUDO_USER:-$(logname)}"
+
+#
+# Tells whether a PAM service takes the YubiKey.
+#
+function has_u2f()
+{
+	local file="$1"
+
+	grep -qF "pam_u2f.so" "$file" 2>/dev/null
+}
+
+#
+# Copies a file to <file>.<date and time>.bak, keeping its mode and owner.
+#
+function backup()
+{
+	local file="$1"
+	local bak
+
+	bak="$file.$(date +%Y%m%d-%H%M%S).bak"
+
+	cp -p "$file" "$bak" || return $?
+	log "Saved a copy of $file as $bak"
+}
+
+#
+# Installs the PAM module and the registration tool when they are missing.
+#
+function install_packages()
+{
+	dpkg -s libpam-u2f pamu2fcfg >/dev/null 2>&1 && return
+
+	log "Installing libpam-u2f and pamu2fcfg ..."
+	apt-get install -y libpam-u2f pamu2fcfg || return $?
+}
+
+#
+# Registers the YubiKey into yubikey/u2f_keys, owned by the user. Root
+# writes in a directory the user owns: refuse a symlink put in its place,
+# which would make root overwrite the file it points at.
+#
+function register_key()
+{
+	if [[ -L "$keys" || -L "${keys%/*}" ]]; then
+		error "$keys or its directory is a symlink; remove it and run again."
+		return 1
+	fi
+	mkdir -p "${keys%/*}" && chown "$user" "${keys%/*}" || return $?
+
+	log "Touch the YubiKey when it blinks ..."
+	pamu2fcfg -u "$user" -o "$origin" -i "$origin" > "$keys.tmp" ||
+		{ rm -f "$keys.tmp"; return 1; }
+	chown "$user" "$keys.tmp" && mv "$keys.tmp" "$keys" || return $?
+	log "Registered the YubiKey in $keys. Commit it."
+}
+
+#
+# Copies yubikey/u2f_keys to /etc/Yubico/u2f_keys when it differs.
+#
+function install_authfile()
+{
+	cmp -s "$keys" "$authfile" && return
+
+	install -D -m 644 -o root -g root "$keys" "$authfile" || return $?
+	log "Installed $authfile"
+}
+
+#
+# Puts pam_u2f before the password stack of a PAM service, after a backup
+# of its file.
+#
+function install_pam()
+{
+	local file="$1"
+
+	grep -q '^@include common-auth' "$file" ||
+		{ error "$file has no '@include common-auth' line."; return 1; }
+
+	backup "$file" || return $?
+	awk -v line="$pam_line" '
+		!done && /^@include common-auth/ { print line; done = 1 }
+		{ print }' "$file" > "$file.tmp" || return $?
+	cat "$file.tmp" > "$file" || return $?
+	rm -f "$file.tmp"
+}
+
+[[ "$(uname -s)" == "Linux" ]] || fail "The YubiKey for sudo is for Ubuntu!"
+check_root || exit $?
+
+install_packages || fail "Installing the packages failed!"
+
+if [[ -f "$keys" ]]; then
+	log "The YubiKey is registered already, in yubikey/u2f_keys."
+else
+	register_key || fail "Registering the YubiKey failed!"
+fi
+
+install_authfile || fail "Installing $authfile failed!"
+
+for file in $pam_files; do
+	if has_u2f "$file"; then
+		log "$file takes the YubiKey already."
+	else
+		install_pam "$file" || fail "Changing $file failed!"
+		log "$file takes the YubiKey. Try it in a new terminal: sudo -k true"
+	fi
+done

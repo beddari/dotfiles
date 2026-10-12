@@ -44,6 +44,30 @@ works. A backup of each PAM file it changes is saved beside it as
 `<file>.<date>.bak`. Rerun after a major macOS upgrade if the dialogs stop
 taking Touch ID.
 
+## YubiKey for sudo (Ubuntu)
+
+```sh
+task yubikey-sudo
+```
+
+Result: `sudo` asks for a touch of the YubiKey; the password still works,
+and is what it asks for with no key plugged in, after a touch that did not
+come, and over ssh. `sudo -i` has its own PAM service, `sudo-i`, and gets
+the same line. A backup of each file is saved beside it as
+`<file>.<date>.bak`. Try it in a new terminal with `sudo -k true` before
+closing the one you ran it in.
+
+The first run registers the key, a touch, into `yubikey/u2f_keys`: a key
+handle and a public key, not secret. Commit it, and the next computer
+registers nothing. `/etc/Yubico/u2f_keys` is a root-owned copy, so that no
+user can register a key of their own. The origin is `pam://dotfiles` rather
+than the hostname, so one registration serves every computer.
+
+A second YubiKey goes on the same line:
+`pamu2fcfg -n -o pam://dotfiles -i pam://dotfiles >> yubikey/u2f_keys`,
+then `task yubikey-sudo` again. The GNOME authentication dialogs are not
+covered; they keep asking for the password.
+
 ## Root prompt
 
 ```sh

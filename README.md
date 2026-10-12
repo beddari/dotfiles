@@ -18,7 +18,7 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
 - Brave on the Mac without Rewards, Wallet, VPN, AI chat, News or password
   manager; Brave Origin on Ubuntu.
 - Ubuntu: the apt repositories with their keys pinned, GNOME settings from
-  a file; AltGr+Space is a plain space.
+  a file, a touch of the YubiKey for `sudo`; AltGr+Space is a plain space.
 
 ## Set up a new computer
 
@@ -47,6 +47,7 @@ them.
 | `task theme-preview` | Prompt and `ls` shown in every theme |
 | `task ssh-enclave -- <command>` | Secure Enclave keys made and loaded (Mac) |
 | `task touchid` | Touch ID for `sudo` and auth dialogs (Mac, sudo) |
+| `task yubikey-sudo` | A YubiKey touch for `sudo`, password as fallback (Ubuntu, sudo) |
 | `task root-prompt` | Red prompt in root shells (sudo) |
 | `task brave-policy` | Brave policy installed (Mac, sudo) |
 | `task apt-repos` | Repositories in `apt/` installed (Ubuntu, sudo) |
@@ -72,7 +73,7 @@ Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
 local/bin/     theme, ssh-enclave
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
-vim/ ghostty/ vscodium/ themes/ brave/ macos/ gnome/ apt/    tool configs
+vim/ ghostty/ vscodium/ themes/ brave/ macos/ gnome/ apt/ yubikey/    tool configs
 docs/          the docs below
 ```
 
@@ -81,4 +82,4 @@ docs/          the docs below
 | [docs/ssh.md](docs/ssh.md) | Agent, Secure Enclave keys, YubiKey, git signing |
 | [docs/themes.md](docs/themes.md) | Themes |
 | [docs/vscodium.md](docs/vscodium.md) | VSCodium |
-| [docs/system.md](docs/system.md) | apt repos, Touch ID, root prompt, Brave policy, GNOME |
+| [docs/system.md](docs/system.md) | apt repos, Touch ID, YubiKey, root prompt, Brave policy, GNOME |
