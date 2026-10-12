@@ -15,5 +15,5 @@ Use `jeanp413.open-remote-ssh` for Remote-SSH.
 
 ## Ubuntu
 
-Install VSCodium from [its apt repository](https://vscodium.com/#install)
+Install VSCodium with `task apt-repos` and `sudo apt install codium`
 before `task brew`.

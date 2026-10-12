@@ -10,6 +10,9 @@ fi
 # VSCodium keeps extensions in .vscode-oss, its dataFolderName, not .vscode.
 vscodium_ext="$HOME/.vscode-oss/extensions"
 
+# The keyring the brave-keyring package ships, and apt/ holds a copy of.
+brave_keyring="brave-browser-archive-keyring.gpg"
+
 #
 # Prints a log message.
 #
@@ -79,3 +82,13 @@ EOF
 		echo "local/bin/ssh-enclave $HOME/.local/bin/ssh-enclave"
 	fi
 }
+
+#
+# Prints the settings in gnome/settings, one per line: schema, key, then the
+# value, which may have spaces in it. Comments and blank lines are left out.
+#
+function gnome_settings()
+{
+	grep -v '^[[:space:]]*\(#\|$\)' "$root/gnome/settings"
+}
+

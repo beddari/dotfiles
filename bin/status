@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
 # Shows whether each link is in place, the theme in use, whether every
-# package in Brewfile is installed and, on macOS, the ssh-agent and its keys.
+# package in Brewfile is installed, on macOS the ssh-agent and its keys, on
+# GNOME whether the settings in gnome/settings are in use and, on Ubuntu,
+# whether the apt repositories in apt/ are installed.
 #
 
 source "${0%/*}/functions.sh" || exit $?
@@ -71,8 +73,49 @@ function print_ssh_agent()
 	SSH_AUTH_SOCK="$HOME/.ssh/agent.sock" ssh-add -l 2>&1 | sed 's/^/  /'
 }
 
+#
+# Prints one line per setting in gnome/settings: ok, or the value in use.
+#
+function print_gnome()
+{
+	local schema key value current
+
+	log "GNOME settings:"
+	while read -r schema key value; do
+		current="$(gsettings get "$schema" "$key" 2>&1)"
+		if [[ "$current" == "$value" ]]; then
+			current="ok"
+		fi
+		printf "  %-48s %s\n" "$schema $key" "$current"
+	done < <(gnome_settings)
+}
+
+#
+# Prints one line per file in apt/: ok, missing, or differs from the one
+# installed. Then the keys in trusted.gpg.d, which may sign any repository.
+#
+function print_apt()
+{
+	local src dest state
+
+	log "apt repositories:"
+	for src in "$root"/apt/*; do
+		dest="/etc/apt/sources.list.d/${src##*/}"
+		[[ "${src##*/}" == "$brave_keyring" ]] &&
+			dest="/usr/share/keyrings/$brave_keyring"
+		if   cmp -s "$src" "$dest"; then state="ok"
+		elif [[ -e "$dest" ]]; then state="differs. Run: task apt-repos"
+		else state="missing. Run: task apt-repos"
+		fi
+		printf "  %-48s %s\n" "$dest" "$state"
+	done
+	echo "  Trusted for every repository:" /etc/apt/trusted.gpg.d/*
+}
+
 print_links
 print_theme
 print_packages
 [[ "$(uname -s)" == "Darwin" ]] && print_ssh_agent
+command -v gsettings >/dev/null && print_gnome
+[[ -d /etc/apt/sources.list.d ]] && print_apt
 exit 0

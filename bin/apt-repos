@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# Installs the apt repositories in apt/ on Ubuntu, then updates apt. Run it
+# as root:
+#
+#   sudo bin/apt-repos
+#
+# Each apt/<name>.sources goes to /etc/apt/sources.list.d with its signing
+# key inline, so the keys are pinned in git. Brave is the exception: its
+# brave-keyring package checks for brave-browser-release.sources signed by
+# the keyring it ships, and otherwise trusts that key for every repository.
+# So the keyring is installed from apt/ when missing, and the package keeps
+# it current from then on.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+sources_dir="/etc/apt/sources.list.d"
+
+#
+# Copies every apt/*.sources that is missing or differs.
+#
+function install_sources()
+{
+	local src dest
+
+	for src in "$root"/apt/*.sources; do
+		dest="$sources_dir/${src##*/}"
+		cmp -s "$src" "$dest" && continue
+		log "Installing $dest ..."
+		install -m 644 "$src" "$dest" || return $?
+	done
+}
+
+#
+# Installs the Brave keyring when missing.
+#
+function install_brave_keyring()
+{
+	local src="$root/apt/$brave_keyring"
+	local dest="/usr/share/keyrings/$brave_keyring"
+
+	[[ -e "$dest" ]] && return
+	log "Installing $dest ..."
+	install -m 644 "$src" "$dest" || return $?
+}
+
+[[ "$(uname -s)" == "Linux" ]] || fail "The apt repositories are for Ubuntu!"
+check_root || exit $?
+
+install_sources       || fail "Installing the sources failed!"
+install_brave_keyring || fail "Installing the Brave keyring failed!"
+apt-get update        || fail "apt-get update failed!"

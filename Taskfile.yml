@@ -61,6 +61,18 @@ tasks:
     cmds:
       - sudo bin/brave-policy
 
+  apt-repos:
+    desc: Install the apt repositories in apt/, on Ubuntu (sudo)
+    silent: true
+    cmds:
+      - sudo bin/apt-repos
+
+  gnome:
+    desc: Apply the settings in gnome/settings, on a GNOME desktop
+    silent: true
+    cmds:
+      - bin/gnome
+
   lint:
     desc: Run shellcheck on the scripts and check that the JSON files parse
     cmds:

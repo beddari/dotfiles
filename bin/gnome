@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Applies the settings in gnome/settings with gsettings, on a GNOME desktop.
+# Safe to rerun: a setting that already has the value is left alone.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+#
+# Sets every setting in gnome/settings that differs from the value in use.
+#
+function apply_settings()
+{
+	local schema key value
+
+	while read -r schema key value; do
+		if [[ "$(gsettings get "$schema" "$key")" == "$value" ]]; then
+			continue
+		fi
+		log "$schema $key $value"
+		gsettings set "$schema" "$key" "$value" || return $?
+	done < <(gnome_settings)
+}
+
+command -v gsettings >/dev/null || fail "gsettings is missing; not GNOME?"
+
+apply_settings || fail "Applying the GNOME settings failed!"

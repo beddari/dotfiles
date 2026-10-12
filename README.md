@@ -17,11 +17,10 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
   Enclave, Touch ID for `sudo`.
 - Brave on the Mac without Rewards, Wallet, VPN, AI chat, News or password
   manager; Brave Origin on Ubuntu.
+- Ubuntu: the apt repositories with their keys pinned, GNOME settings from
+  a file; AltGr+Space is a plain space.
 
 ## Set up a new computer
-
-On Ubuntu, first install VSCodium from
-[its apt repository](https://vscodium.com/#install).
 
 ```sh
 git clone https://git.dataverket.org/beddari/dotfiles ~/kode/dotfiles
@@ -30,6 +29,8 @@ bin/brew-bundle     # Homebrew and the packages, task among them
 task link           # link the files, apply the theme
 task status         # every link should say ok
 ```
+
+On Ubuntu, then `task apt-repos` and `sudo apt install codium`.
 
 Open a new shell. To push, switch the remote to ssh:
 `git remote set-url origin ssh://git@git.dataverket.org/beddari/dotfiles.git`
@@ -40,13 +41,15 @@ Open a new shell. To push, switch the remote to ssh:
 |---|---|
 | `task brew` | Packages in `Brewfile` installed |
 | `task link` | Links in place, theme applied; safe to rerun |
-| `task status` | Links, theme, missing packages, ssh-agent and its keys |
+| `task status` | Links, theme, packages, ssh-agent, GNOME settings, apt repos |
 | `task theme -- <name>` | Every tool switched to the theme |
 | `task theme-preview` | Prompt and `ls` shown in every theme |
 | `task ssh-enclave -- <command>` | Secure Enclave keys made and loaded (Mac) |
 | `task touchid` | Touch ID for `sudo` and auth dialogs (Mac, sudo) |
 | `task root-prompt` | Red prompt in root shells (sudo) |
 | `task brave-policy` | Brave policy installed (Mac, sudo) |
+| `task apt-repos` | Repositories in `apt/` installed (Ubuntu, sudo) |
+| `task gnome` | Settings in `gnome/settings` applied (Ubuntu) |
 | `task lint` | shellcheck and JSON checks pass |
 
 `theme` and `ssh-enclave` also work from anywhere, from `~/.local/bin`.
@@ -68,7 +71,7 @@ Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
 local/bin/     theme, ssh-enclave
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
-vim/ ghostty/ vscodium/ themes/ brave/ macos/    tool configs
+vim/ ghostty/ vscodium/ themes/ brave/ macos/ gnome/ apt/    tool configs
 docs/          the docs below
 ```
 
@@ -77,4 +80,4 @@ docs/          the docs below
 | [docs/ssh.md](docs/ssh.md) | Agent, Secure Enclave keys, YubiKey, git signing |
 | [docs/themes.md](docs/themes.md) | Themes |
 | [docs/vscodium.md](docs/vscodium.md) | VSCodium |
-| [docs/system.md](docs/system.md) | Touch ID, root prompt, Brave policy |
+| [docs/system.md](docs/system.md) | apt repos, Touch ID, root prompt, Brave policy, GNOME |

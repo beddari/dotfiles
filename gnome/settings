@@ -1,0 +1,9 @@
+# GNOME settings, one per line: schema key value. bin/gnome applies them
+# with gsettings, task status shows which differ. Values are GVariant text,
+# as gsettings prints them.
+
+# Space is a plain space at every modifier level. The Norwegian layout puts
+# a no-break space on AltGr+Space, which is invisible and breaks commands
+# and code, and every other nbsp variant puts another invisible character
+# there instead.
+org.gnome.desktop.input-sources xkb-options ['nbsp:none']
