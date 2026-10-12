@@ -43,6 +43,12 @@ tasks:
     cmds:
       - local/bin/ssh-enclave {{.CLI_ARGS}}
 
+  age-yubikey:
+    desc: "Register the YubiKey plugged in as an age identity for sops: task age-yubikey -- --serial N"
+    silent: true
+    cmds:
+      - bin/age-yubikey {{.CLI_ARGS}}
+
   touchid:
     desc: Let Touch ID answer sudo and the authorization dialogs, on macOS
     silent: true

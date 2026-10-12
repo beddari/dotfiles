@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# Registers the YubiKey plugged in as an age identity in keys.txt, the file
+# sops reads without being told, so that sops and age decrypt with it. The
+# identity is read from the key, so it can be made again on any computer:
+#
+#   bin/age-yubikey              # the one YubiKey plugged in
+#   bin/age-yubikey --serial N   # one of several
+#
+# A key that is in the file already is left alone. Usage: docs/age.md.
+#
+
+source "${0%/*}/functions.sh" || exit $?
+
+keys="$sops_age_dir/keys.txt"
+
+#
+# Tells whether the key file has the identity of a YubiKey serial number.
+#
+function registered()
+{
+	local serial="$1"
+
+	grep -q "^# *Serial: $serial," "$keys" 2>/dev/null
+}
+
+#
+# Appends an identity to the key file, made with mode 600 when missing, a
+# blank line between identities.
+#
+function append_identity()
+{
+	local identity="$1"
+
+	( umask 077 && mkdir -p "${keys%/*}" && touch "$keys" ) || return $?
+	[[ -s "$keys" ]] && { echo >> "$keys" || return 1; }
+	printf '%s\n' "$identity" >> "$keys" || return $?
+}
+
+# The plugin prints a comment block with the serial and the recipient, then
+# the identity stub, and nothing at all for a key that is not plugged in. It
+# prints the recipient on stderr too, for the user.
+identity="$(age-plugin-yubikey --identity "$@")" ||
+	fail "age-plugin-yubikey failed!"
+[[ -n "$identity" ]] || fail "No YubiKey with an age identity is plugged in!"
+
+serial="$(awk '/^# *Serial:/ { sub(",", "", $3); print $3; exit }' \
+	<<< "$identity")"
+[[ -n "$serial" ]] || fail "The identity names no serial number!"
+
+if registered "$serial"; then
+	log "YubiKey $serial is in $keys already."
+else
+	append_identity "$identity" || fail "Writing $keys failed!"
+	log "Registered YubiKey $serial in $keys."
+fi

@@ -13,7 +13,6 @@ export PATH="$HOME/.local/bin:$HOME/go/bin:/opt/homebrew/opt/coreutils/libexec/g
 export EDITOR=vim
 export LESS='-FRXx4'
 export NODE_OPTIONS="--no-deprecation"
-export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
 if [[ "$(uname)" == "Darwin" ]]; then
     # Set config folder for e.g sops

@@ -46,6 +46,7 @@ them.
 | `task theme -- <name>` | Every tool switched to the theme |
 | `task theme-preview` | Prompt and `ls` shown in every theme |
 | `task ssh-enclave -- <command>` | Secure Enclave keys made and loaded (Mac) |
+| `task age-yubikey` | The YubiKey registered as an age identity for sops |
 | `task touchid` | Touch ID for `sudo` and auth dialogs (Mac, sudo) |
 | `task yubikey-sudo` | A YubiKey touch for `sudo`, password as fallback (Ubuntu, sudo) |
 | `task root-prompt` | Red prompt in root shells (sudo) |
@@ -80,6 +81,7 @@ docs/          the docs below
 | Doc | Covers |
 |---|---|
 | [docs/ssh.md](docs/ssh.md) | Agent, Secure Enclave keys, YubiKey, git signing |
+| [docs/age.md](docs/age.md) | age identities on the YubiKey, for sops |
 | [docs/themes.md](docs/themes.md) | Themes |
 | [docs/vscodium.md](docs/vscodium.md) | VSCodium |
 | [docs/system.md](docs/system.md) | apt repos, Touch ID, YubiKey, root prompt, Brave policy, GNOME |

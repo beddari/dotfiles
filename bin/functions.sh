@@ -10,6 +10,10 @@ fi
 # VSCodium keeps extensions in .vscode-oss, its dataFolderName, not .vscode.
 vscodium_ext="$HOME/.vscode-oss/extensions"
 
+# Where sops reads age identities from without being told: keys.txt here.
+# On the Mac, shellrc sets XDG_CONFIG_HOME so that sops looks here too.
+sops_age_dir="${XDG_CONFIG_HOME:-$HOME/.config}/sops/age"
+
 # The keyring the brave-keyring package ships, and apt/ holds a copy of.
 brave_keyring="brave-browser-archive-keyring.gpg"
 
