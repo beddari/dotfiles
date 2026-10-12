@@ -11,7 +11,8 @@ task apt-repos
 Result: the repositories in `apt/` installed in `/etc/apt/sources.list.d`
 and apt updated. One deb822 `.sources` file per repository with its signing
 key inline, so the key is pinned here: Brave, VSCodium, Zabbly's incus, and
-the OBS Studio and quickemu PPAs. `task status` shows the files that differ,
+the OBS Studio, quickemu and xtradeb PPAs; xtradeb builds chromium and
+firefox. `task status` shows the files that differ,
 and the keys in `trusted.gpg.d`, which may sign any repository; Ubuntu's own
 two should be the only ones.
 
