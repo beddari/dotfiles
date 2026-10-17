@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Applies the settings in gnome/settings with gsettings, on a GNOME desktop.
+# Applies the settings in gnome/settings with gsettings, on Ubuntu's GNOME.
 # Safe to rerun: a setting that already has the value is left alone.
 #
 
@@ -22,6 +22,7 @@ function apply_settings()
 	done < <(gnome_settings)
 }
 
+[[ "$(uname -s)" == "Linux" ]] || fail "The GNOME settings are for Ubuntu!"
 command -v gsettings >/dev/null || fail "gsettings is missing; not GNOME?"
 
 apply_settings || fail "Applying the GNOME settings failed!"

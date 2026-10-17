@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
 # Shows whether each link is in place, the theme in use, whether every
-# package in Brewfile is installed, on macOS the ssh-agent and its keys, on
-# GNOME whether the settings in gnome/settings are in use and, on Ubuntu,
-# whether the apt repositories in apt/ are installed.
+# package in Brewfile is installed, on macOS the ssh-agent and its keys and,
+# on Ubuntu, whether the settings in gnome/settings are in use and the apt
+# repositories in apt/ are installed. Homebrew's glib brings gsettings to the
+# Mac too, so GNOME is checked for by the system, not by gsettings.
 #
 
 source "${0%/*}/functions.sh" || exit $?
@@ -120,6 +121,7 @@ print_links
 print_theme
 print_packages
 [[ "$(uname -s)" == "Darwin" ]] && print_ssh_agent
-command -v gsettings >/dev/null && print_gnome
+[[ "$(uname -s)" == "Linux" ]] && command -v gsettings >/dev/null &&
+	print_gnome
 [[ -d /etc/apt/sources.list.d ]] && print_apt
 exit 0

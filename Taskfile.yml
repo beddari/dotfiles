@@ -80,7 +80,7 @@ tasks:
       - sudo bin/apt-repos
 
   gnome:
-    desc: Apply the settings in gnome/settings, on a GNOME desktop
+    desc: Apply the settings in gnome/settings, on Ubuntu
     silent: true
     cmds:
       - bin/gnome
