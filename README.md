@@ -72,7 +72,7 @@ them.
 Taskfile.yml   tasks; each calls a script in bin/
 Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
-local/bin/     theme, ssh-enclave
+local/bin/     theme, ssh-enclave, ssh-agent-launchd
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
 vim/ ghostty/ vscodium/ themes/ brave/ macos/ gnome/ apt/ yubikey/    tool configs
 docs/          the docs below

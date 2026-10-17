@@ -7,6 +7,11 @@ and for apps opened from the Dock. `task link` starts it; `task status`
 shows it and its keys. Reopen apps that were running before the first
 `task link`. On Ubuntu the desktop's agent is used.
 
+launchd starts it at login through `~/.local/bin/ssh-agent-launchd`, which
+macOS lists by that name in System Settings, General, Login Items &
+Extensions, Allow in the Background. Keep it switched on: switched off, the
+agent is gone after the next restart, with nothing in the logs.
+
 ## Secure Enclave keys (Mac)
 
 ```sh
@@ -80,6 +85,7 @@ Add the same public key on the forge as a signing key.
 | Symptom | Fix |
 |---|---|
 | Mac: signing fails, key not in agent | `ssh-enclave load` |
+| Mac: `~/.ssh/agent.sock` missing after a restart | Allow `ssh-agent-launchd` in the background, then `task link` |
 | Ubuntu: `defaultKeyCommand ... returned no keys` | `ssh-add ~/.ssh/id_yubikey_<serial>` |
 | `git log --show-signature` says no principal matched | Add the key to `allowed_signers`, below |
 | No YubiKey stub on a computer | Copy `~/.ssh/id_yubikey_<serial>{,.pub}` from the other |

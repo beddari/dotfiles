@@ -97,15 +97,18 @@ function set_macos_defaults()
 #
 # Installs the LaunchAgent that runs Homebrew's ssh-agent, and starts it. It
 # is left alone when it is installed and running already: a restart would
-# drop the keys in the agent.
+# drop the keys in the agent. A plist cannot expand $HOME, so @HOME@ in the
+# one in this repository is filled in here.
 #
 function install_ssh_agent()
 {
-	local service
+	local service plist
 
 	service="gui/$(id -u)/com.brew.ssh-agent"
+	plist="$(sed "s|@HOME@|$HOME|g" "$root/macos/com.brew.ssh-agent.plist")" ||
+		return $?
 
-	if cmp -s "$root/macos/com.brew.ssh-agent.plist" "$agent_plist" &&
+	if [[ "$plist" == "$(cat "$agent_plist" 2>/dev/null)" ]] &&
 	   launchctl print "$service" >/dev/null 2>&1; then
 		return
 	fi
@@ -113,7 +116,7 @@ function install_ssh_agent()
 	log "Installing and starting the ssh-agent LaunchAgent ..."
 	launchctl bootout "$service" 2>/dev/null
 	mkdir -p "${agent_plist%/*}" || return $?
-	cp -f "$root/macos/com.brew.ssh-agent.plist" "$agent_plist" || return $?
+	echo "$plist" > "$agent_plist" || return 1
 	launchctl bootstrap "gui/$(id -u)" "$agent_plist" || return $?
 }
 

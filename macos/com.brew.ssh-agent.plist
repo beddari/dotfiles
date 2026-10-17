@@ -7,9 +7,7 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/sh</string>
-        <string>-c</string>
-        <string>launchctl setenv SSH_AUTH_SOCK "$HOME/.ssh/agent.sock"; rm -f "$HOME/.ssh/agent.sock"; exec /opt/homebrew/bin/ssh-agent -D -a "$HOME/.ssh/agent.sock"</string>
+        <string>@HOME@/.local/bin/ssh-agent-launchd</string>
     </array>
 
     <key>RunAtLoad</key>

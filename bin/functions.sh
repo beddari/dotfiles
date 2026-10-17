@@ -84,6 +84,7 @@ local/bin/theme $HOME/.local/bin/theme
 EOF
 	if [[ "$(uname -s)" == "Darwin" ]]; then
 		echo "local/bin/ssh-enclave $HOME/.local/bin/ssh-enclave"
+		echo "local/bin/ssh-agent-launchd $HOME/.local/bin/ssh-agent-launchd"
 	fi
 }
 

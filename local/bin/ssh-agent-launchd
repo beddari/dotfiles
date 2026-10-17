@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# Runs Homebrew's ssh-agent on ~/.ssh/agent.sock, for the LaunchAgent
+# com.brew.ssh-agent. launchd forgets SSH_AUTH_SOCK at logout, so it is set
+# here, at every login, for apps opened from the Dock.
+#
+# An agent that crashed leaves its socket behind, and a new one cannot bind
+# to it. macOS lists this script under Login Items & Extensions, Allow in the
+# Background; switched off there, the agent does not start at login.
+#
+
+sock="$HOME/.ssh/agent.sock"
+
+launchctl setenv SSH_AUTH_SOCK "$sock" || exit $?
+rm -f "$sock" || exit $?
+exec /opt/homebrew/bin/ssh-agent -D -a "$sock"
