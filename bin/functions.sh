@@ -97,3 +97,22 @@ function gnome_settings()
 	grep -v '^[[:space:]]*\(#\|$\)' "$root/gnome/settings"
 }
 
+
+#
+# Prints the extensions in vscodium/extensions.txt, one per line. Comments and
+# blank lines are left out.
+#
+function codium_extensions()
+{
+	grep -v '^[[:space:]]*\(#\|$\)' "$root/vscodium/extensions.txt"
+}
+
+#
+# Prints the extensions in vscodium/extensions.txt that VSCodium does not
+# have. Extension ids are compared in lowercase, as VSCodium does.
+#
+function missing_codium_extensions()
+{
+	awk 'NR == FNR { have[tolower($0)]; next } !(tolower($0) in have)' \
+	    <(codium --list-extensions 2>/dev/null) <(codium_extensions)
+}

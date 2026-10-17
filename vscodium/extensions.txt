@@ -1,0 +1,11 @@
+# The VSCodium extensions that task brew installs, from Open VSX, one id per
+# line. Check an extension and its publisher before adding it.
+bpruitt-goddard.mermaid-markdown-syntax-highlighting
+dnut.rewrap-revived
+golang.go
+jeanp413.open-remote-ssh
+opentofu.vscode-opentofu
+pomdtr.excalidraw-editor
+pomdtr.markdown-kroki
+shardulm94.trailing-spaces
+terrastruct.d2

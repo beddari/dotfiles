@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Installs Homebrew when it is missing, then the packages in Brewfile. On a
-# new computer it is the first step, run as bin/brew-bundle: it installs
-# task, which runs the rest.
+# Installs Homebrew when it is missing, then the packages in Brewfile and the
+# VSCodium extensions in vscodium/extensions.txt. On a new computer it is the
+# first step, run as bin/brew-bundle: it installs task, which runs the rest.
 #
 
 source "${0%/*}/functions.sh" || exit $?
@@ -19,6 +19,28 @@ function brew_prefix()
 	esac
 }
 
+#
+# Installs the extensions in vscodium/extensions.txt that VSCodium does not
+# have, with the codium CLI only, so that they come from Open VSX.
+#
+function install_codium_extensions()
+{
+	local ext args=()
+
+	if ! command -v codium >/dev/null; then
+		error "VSCodium is not installed; its extensions are left out."
+		return
+	fi
+
+	while read -r ext; do
+		args+=(--install-extension "$ext")
+	done < <(missing_codium_extensions)
+	[[ ${#args[@]} -eq 0 ]] && return
+
+	log "Installing the VSCodium extensions ..."
+	codium "${args[@]}" || return $?
+}
+
 if ! command -v brew >/dev/null; then
 	log "Installing Homebrew ..."
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" ||
@@ -31,3 +53,4 @@ fi
 
 log "Installing the packages in Brewfile ..."
 brew bundle --file="$root/Brewfile" || fail "brew bundle failed!"
+install_codium_extensions || fail "Installing the VSCodium extensions failed!"

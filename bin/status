@@ -43,14 +43,18 @@ function print_theme()
 }
 
 #
-# Prints whether the packages in Brewfile are installed.
+# Prints whether the packages in Brewfile and the VSCodium extensions in
+# vscodium/extensions.txt are installed.
 #
 function print_packages()
 {
-	if brew bundle check --file="$root/Brewfile" >/dev/null 2>&1; then
-		log "Packages: all installed"
-	else
+	if ! brew bundle check --file="$root/Brewfile" >/dev/null 2>&1; then
 		log "Packages: some are missing. Run: task brew"
+	elif command -v codium >/dev/null &&
+	     [[ -n "$(missing_codium_extensions)" ]]; then
+		log "Packages: some VSCodium extensions are missing. Run: task brew"
+	else
+		log "Packages: all installed"
 	fi
 }
 

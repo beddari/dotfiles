@@ -44,16 +44,3 @@ cask "proton-pass" if OS.mac?
 cask "signal" if OS.mac?
 cask "spotify" if OS.mac?
 cask "vscodium" if OS.mac?
-
-# brew bundle installs these with the codium CLI, when there is no code
-# CLI, so they come from Open VSX. On Ubuntu, VSCodium comes from its own apt
-# repository first; docs/vscodium.md has the details.
-vscode "bpruitt-goddard.mermaid-markdown-syntax-highlighting"
-vscode "dnut.rewrap-revived"
-vscode "golang.go"
-vscode "jeanp413.open-remote-ssh"
-vscode "opentofu.vscode-opentofu"
-vscode "pomdtr.excalidraw-editor"
-vscode "pomdtr.markdown-kroki"
-vscode "shardulm94.trailing-spaces"
-vscode "terrastruct.d2"
