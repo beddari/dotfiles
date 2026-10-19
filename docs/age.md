@@ -38,7 +38,11 @@ A new identity on a YubiKey: `age-plugin-yubikey --generate`, then
 
 `age-plugin-yubikey` comes from Homebrew on both computers. On Ubuntu it
 talks to the key through the system's `pcscd`, from apt, which Homebrew
-does not provide; the Mac has it built in.
+does not provide; the Mac has it built in. Homebrew's plugin looks for the
+socket under Homebrew's own prefix, so `shellrc` points it at the system's
+with `PCSCLITE_CSOCK_NAME`. Without it, sops says "Failed to get the data
+key" and the plugin says "pcscd is not running" while pcscd is fine. pcscd
+logs a protocol mismatch, 4.6 against 4.4, on every use; it works anyway.
 
 ## A system's key
 

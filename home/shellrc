@@ -25,6 +25,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
         ! ssh-add -l 2>/dev/null | grep -q 'ECDSA-SK)$'; then
         ssh-enclave load 2>/dev/null
     fi
+else
+    # Homebrew's age-plugin-yubikey looks for pcscd's socket under Homebrew's
+    # own prefix, where there is none; the system's pcscd listens here.
+    export PCSCLITE_CSOCK_NAME=/run/pcscd/pcscd.comm
 fi
 
 # Dircolors
