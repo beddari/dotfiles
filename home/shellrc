@@ -42,3 +42,24 @@ fi
 terminfo-install() {
     infocmp "$TERM" | ssh "$@" -- tic -x -
 }
+
+# swamp decrypts its vault with a process key of its own, named after the
+# repository it runs in: ~/.config/sops/age/swamp-<repo>.txt (docs/age.md).
+# Only the swamp process is handed it. sops from a terminal keeps reading
+# keys.txt, so a person always touches. On a computer without the file, or
+# outside a swamp repository, swamp runs as it is and sops finds the YubiKey.
+swamp() {
+    local dir="$PWD" key
+
+    while [[ "$dir" != / && ! -f "$dir/.swamp.yaml" ]]; do
+        dir="${dir%/*}"
+        dir="${dir:-/}"
+    done
+    key="${XDG_CONFIG_HOME:-$HOME/.config}/sops/age/swamp-${dir##*/}.txt"
+
+    if [[ -f "$dir/.swamp.yaml" && -f "$key" ]]; then
+        SOPS_AGE_KEY_FILE="${SOPS_AGE_KEY_FILE:-$key}" command swamp "$@"
+    else
+        command swamp "$@"
+    fi
+}

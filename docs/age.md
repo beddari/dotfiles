@@ -18,6 +18,14 @@ system, in that shell or that repository:
 export SOPS_AGE_KEY_FILE=~/.config/sops/age/dev-cluster.txt
 ```
 
+A swamp repository's process key, `swamp-<repo>.txt`, is named for the
+swamp process alone: the `swamp` function in `shellrc` sets
+`SOPS_AGE_KEY_FILE` to it when the file is here and the shell is inside
+that repository, and to nothing otherwise. `sops` from the same terminal
+still reads only `keys.txt`, so a person always touches and only swamp
+decrypts unattended. A shell that already exports `SOPS_AGE_KEY_FILE`
+wins.
+
 ## YubiKey
 
 A YubiKey's identity is a stub the plugin reads from the key itself, so a
