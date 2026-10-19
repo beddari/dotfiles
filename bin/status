@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
 # Shows whether each link is in place, the theme in use, whether every
-# package in Brewfile is installed, on macOS the ssh-agent and its keys and,
-# on Ubuntu, whether the settings in gnome/settings are in use and the apt
-# repositories in apt/ are installed. Homebrew's glib brings gsettings to the
+# package in Brewfile is installed, whether the Claude Code settings are
+# merged, on macOS the ssh-agent and its keys and, on Ubuntu, whether the
+# settings in gnome/settings are in use and the apt repositories in apt/ are
+# installed. Homebrew's glib brings gsettings to the
 # Mac too, so GNOME is checked for by the system, not by gsettings.
 #
 
@@ -56,6 +57,23 @@ function print_packages()
 		log "Packages: some VSCodium extensions are missing. Run: task brew"
 	else
 		log "Packages: all installed"
+	fi
+}
+
+#
+# Prints whether claude/settings.json is in the Claude Code user settings.
+#
+function print_claude()
+{
+	local settings="$HOME/.claude/settings.json"
+
+	if [[ ! -f "$settings" ]]; then
+		log "Claude Code settings: missing. Run: task link"
+	elif jq -se '.[0] * .[1] == .[0]' "$settings" "$root/claude/settings.json" \
+	     >/dev/null 2>&1; then
+		log "Claude Code settings: ok"
+	else
+		log "Claude Code settings: differ. Run: task link"
 	fi
 }
 
@@ -120,6 +138,7 @@ function print_apt()
 print_links
 print_theme
 print_packages
+print_claude
 [[ "$(uname -s)" == "Darwin" ]] && print_ssh_agent
 [[ "$(uname -s)" == "Linux" ]] && command -v gsettings >/dev/null &&
 	print_gnome

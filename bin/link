@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# Links the dotfiles into the home directory, merges the VSCodium settings,
-# and applies the theme in use, or solarized-osaka-dark on the first run. On
-# macOS it also sets a few defaults and installs the ssh-agent LaunchAgent.
+# Links the dotfiles into the home directory, merges the VSCodium and Claude
+# Code settings, and applies the theme in use, or solarized-osaka-dark on the
+# first run. On macOS it also sets a few defaults and installs the ssh-agent
+# LaunchAgent.
 #
 # It can run again: a link is replaced by one to this repository, and a link
 # to a file that this repository no longer has is removed.
@@ -63,6 +64,26 @@ function merge_vscodium_settings()
 	fi
 
 	jq -s '.[0] * .[1]' "$settings" "$root/vscodium/settings.json" \
+		> "$settings.tmp" || return $?
+	mv "$settings.tmp" "$settings"
+}
+
+#
+# Merges claude/settings.json into the Claude Code user settings. The file in
+# this repository wins; keys it does not have, the state Claude Code writes
+# itself, are kept.
+#
+function merge_claude_settings()
+{
+	local settings="$HOME/.claude/settings.json"
+
+	mkdir -p "${settings%/*}" || return $?
+	if [[ ! -f "$settings" ]]; then
+		cp "$root/claude/settings.json" "$settings"
+		return
+	fi
+
+	jq -s '.[0] * .[1]' "$settings" "$root/claude/settings.json" \
 		> "$settings.tmp" || return $?
 	mv "$settings.tmp" "$settings"
 }
@@ -130,6 +151,7 @@ prune_links
 chmod 700 "$HOME/.ssh" || fail "Setting the mode of ~/.ssh failed!"
 
 merge_vscodium_settings || fail "Merging the VSCodium settings failed!"
+merge_claude_settings   || fail "Merging the Claude Code settings failed!"
 
 "$root/local/bin/theme" "${theme:-solarized-osaka-dark}" ||
 	fail "Applying the theme failed!"

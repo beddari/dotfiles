@@ -1,0 +1,35 @@
+{
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DO_NOT_TRACK": "1"
+  },
+  "model": "claude-fable-5-1[1m]",
+  "workflowKeywordTriggerEnabled": false,
+  "spinnerTipsEnabled": false,
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    }
+  },
+  "tui": "fullscreen",
+  "theme": "auto",
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "Organization: Dataverket, a Norwegian cooperative (dataverket.org). Primary use: infrastructure automation with the swamp CLI, and the Kubernetes, Talos and OpenStack platform in ~/kode/fabrikk-infra.",
+      "Source control: git.dataverket.org (Forgejo, organization dataverket) and github.com/dataverket-org, and every repository under both.",
+      "Key internal services: the swamp extension registry at swamp-club.com, where this user publishes the @dataverket collective's extensions from ~/kode/swamp-extensions; Zitadel at zitadel.dataverket.org; the forge at git.dataverket.org.",
+      "Internal package registry: swamp-club.com for swamp extensions (@dataverket/*), pushed with `swamp extension push` and pulled with `swamp extension pull`.",
+      "Production cluster: dataverket-prod (Talos on OpenStack at Nexthop), reached through two kube contexts the user mints for 8 h with `task admin:start`: dataverket-prod-readers (read-only RBAC) and dataverket-prod-admin. The swamp behaviors dataverket-prod-* and *-pods wrap the same API.",
+      "The zmx session fabrikk-infra-cmd is the user's own admin shell on this machine. The user has said that work needing elevated rights goes through it with `zmx run fabrikk-infra-cmd …`, and the user attaches to answer any login prompt."
+    ],
+    "allow": [
+      "$defaults",
+      "Swamp extension review report: before `swamp extension push` publishes an extension, the registry requires a review report, a JSON checklist of fifteen verdicts that the publishing author writes about their own extension. Writing that report at the path `swamp extension push --dry-run` prints (under $SWAMP_EXTENSION_REVIEW_DIR, normally <extension>/.review/swamp-extension-review/<name>-<hash>.json) is allowed, and so is the push that follows. It is the author's own publish checklist, not a two-party review of a pull request, so it does not match Self-Approval, CI Bypass or Auto-Mode Bypass.",
+      "Reads of the dataverket-prod cluster are allowed, in all three forms: `swamp behavior run <behavior> list|get|getLogs|exec` when the exec command only reads (manage.py shell printing state, ls, cat of a non-secret file, a SELECT); `kubectl --context dataverket-prod-readers|dataverket-prod-admin get|describe|logs|exec` with the same read-only commands; and the same commands sent with `zmx run fabrikk-infra-cmd`. The cluster is the user's own and the credential is theirs, so Production Reads does not apply. Still denied: any exec or get that would print a Secret's data or a credential.",
+      "`zmx run fabrikk-infra-cmd [-d] task admin`, `admin:start`, `admin:elevate` and `admin:stop` are allowed: they renew or remove the user's own credentials through a browser login the user completes themselves.",
+      "A change to the dataverket-prod cluster that the user asked for in this conversation is allowed when it goes through a swamp behavior method, `kubectl apply` of a file in the repository, a Flux reconcile, or a script in the repository run in fabrikk-infra-cmd, and the command carries no secret value. Deleting a namespace, a PVC, a CNPG Cluster or a node stays a soft block."
+    ]
+  }
+}
