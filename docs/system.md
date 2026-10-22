@@ -44,6 +44,8 @@ works. A backup of each PAM file it changes is saved beside it as
 `<file>.<date>.bak`. Rerun after a major macOS upgrade if the dialogs stop
 taking Touch ID.
 
+It works inside zmx sessions too.
+
 ## YubiKey for sudo (Ubuntu)
 
 ```sh
