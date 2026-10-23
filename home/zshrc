@@ -18,6 +18,9 @@ setopt HIST_EXPIRE_DUPS_FIRST
 setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 setopt HIST_REDUCE_BLANKS
+
+# Allow # comments on the interactive command line.
+setopt INTERACTIVE_COMMENTS
 bindkey '^R' history-incremental-search-backward
 bindkey -M viins '^R' history-incremental-search-backward
 bindkey -M viins '^A' beginning-of-line
