@@ -25,14 +25,18 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
 ## Set up a new computer
 
 ```sh
-git clone https://git.dataverket.org/beddari/dotfiles ~/kode/dotfiles
-cd ~/kode/dotfiles
+git clone https://git.dataverket.org/beddari/dotfiles ~/kode/beddari/dotfiles
+cd ~/kode/beddari/dotfiles
 bin/brew-bundle     # Homebrew and the packages, task among them
 task link           # link the files, apply the theme
 task status         # every link should say ok
 ```
 
 On Ubuntu, then `task apt-repos` and `sudo apt install codium`.
+
+The checkout can live anywhere: the scripts find the repository from where
+they are, and the links point at it. After moving it, run `task link` from
+the new place; the links are made again to there.
 
 Open a new shell. Repositories on git.dataverket.org fetch over https and
 push over ssh whichever url they were cloned with; `.gitconfig` rewrites

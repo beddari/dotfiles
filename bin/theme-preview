@@ -78,7 +78,7 @@ for file in "$root"/ghostty/themes/*; do
 	magenta="$(fg "${pal[5]}")"	# the git branch and the prompt character
 	yellow="$(fg "${pal[3]}")"	# the git status
 
-	prompt=" ${cyan}~/kode/dotfiles ${magenta}main ${yellow}! ${magenta}❯${FG}"
+	prompt=" ${cyan}${root/#$HOME/~} ${magenta}main ${yellow}! ${magenta}❯${FG}"
 
 	printf "%s\n  %s── %s (%s) ──%s\n" "$reset" "$bold" "$name" "$variant" \
 		"$reset"
