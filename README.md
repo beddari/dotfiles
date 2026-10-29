@@ -10,7 +10,7 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
   shared between shells, kept 21 days.
 - Four themes across Ghostty, VSCodium, Vim, dircolors and delta, one command.
 - git commits and tags signed: the enclave key on the Mac, the YubiKey on
-  Ubuntu.
+  Ubuntu. A commit crediting Claude Code is refused, in every repository.
 - [Ghostty](https://ghostty.org) and [VSCodium](https://vscodium.com),
   configured.
 - Claude Code's settings, with the auto mode rules for Dataverket's
@@ -80,6 +80,7 @@ Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
 local/bin/     theme, ssh-enclave, ssh-agent-launchd
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
+git/hooks/     commit-msg, run in every repository through core.hooksPath
 vim/ ghostty/ vscodium/ claude/ themes/ brave/ macos/ gnome/ apt/ yubikey/    tool configs
 docs/          the docs below
 ```
@@ -90,5 +91,5 @@ docs/          the docs below
 | [docs/age.md](docs/age.md) | age identities on the YubiKey, for sops |
 | [docs/themes.md](docs/themes.md) | Themes |
 | [docs/vscodium.md](docs/vscodium.md) | VSCodium |
-| [docs/claude.md](docs/claude.md) | Claude Code: the settings, and the auto mode rules |
+| [docs/claude.md](docs/claude.md) | Claude Code: the settings, the auto mode rules, and the commit hook |
 | [docs/system.md](docs/system.md) | apt repos, Touch ID, YubiKey, root prompt, Brave policy, GNOME |

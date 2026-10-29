@@ -72,6 +72,7 @@ function links()
 home/zshrc $HOME/.zshrc
 home/bashrc $HOME/.bashrc
 home/gitconfig $HOME/.gitconfig
+git/hooks $HOME/.config/git/hooks
 home/ssh_config $HOME/.ssh/config
 home/starship.toml $HOME/.config/starship.toml
 vim/vimrc $HOME/.vimrc

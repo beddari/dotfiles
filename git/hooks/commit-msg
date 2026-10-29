@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Rejects a commit whose message credits Claude Code: the Co-Authored-By
+# trailer, or the "Generated with" line. Attribution is off in
+# claude/settings.json, and a message that carries it anyway fails here,
+# before the commit is signed, so no YubiKey touch is spent on it.
+#
+# It runs in every repository: core.hooksPath in home/gitconfig names this
+# directory, which task link puts at ~/.config/git/hooks. core.hooksPath
+# hides a repository's own hooks, so the one in .git/hooks runs from here
+# when it exists. A repository that needs its other hooks too sets
+# core.hooksPath to .git/hooks in its own config; docs/claude.md says how.
+#
+
+message="$1"
+
+# What attribution writes: the trailer's address, the link in the
+# "Generated with" line, and a trailer naming Claude without the address.
+credit='noreply@anthropic\.com|claude\.com/claude-code|^co-authored-by:.*claude'
+
+#
+# Prints the lines in the message that credit Claude, with their numbers.
+#
+function claude_lines()
+{
+	grep -n -i -E "$credit" "$message"
+}
+
+#
+# Runs the repository's own commit-msg hook, when it has one. git rev-parse
+# --git-path hooks follows core.hooksPath, so the hook is found by the git
+# directory instead.
+#
+function run_local_hook()
+{
+	local hook
+
+	hook="$(git rev-parse --git-dir)/hooks/commit-msg" || return $?
+	[[ -x "$hook" ]] || return 0
+	"$hook" "$@"
+}
+
+if lines="$(claude_lines)"; then
+	echo "commit-msg: the message credits Claude; attribution is off:" >&2
+	echo "  ${lines//$'\n'/$'\n  '}" >&2
+	exit 1
+fi
+
+run_local_hook "$@" || exit $?

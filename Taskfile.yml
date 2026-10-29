@@ -88,5 +88,5 @@ tasks:
   lint:
     desc: Run shellcheck on the scripts and check that the JSON files parse
     cmds:
-      - shellcheck -s bash -e SC2034,SC2154,SC1090,SC1091,SC2242 bin/* local/bin/*
+      - shellcheck -s bash -e SC2034,SC2154,SC1090,SC1091,SC2242 bin/* local/bin/* git/hooks/*
       - jq empty vscodium/settings.json brave/policy.json claude/settings.json

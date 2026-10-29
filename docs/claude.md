@@ -36,3 +36,25 @@ a change to `claude/settings.json` is a person's commit, and `task link`.
 Per-repository rules, the deterministic `permissions.allow` entries that
 skip the classifier, belong in that repository's `.claude/settings.json`,
 not here.
+
+## No credit in commits
+
+`attribution` is off in `claude/settings.json`, so Claude Code adds no
+`Co-Authored-By` trailer and no "Generated with" line. A session has still
+written the trailer by hand once, into a signed commit, and undoing that
+cost a YubiKey touch and a force push. `git/hooks/commit-msg` is the
+guard: it fails a commit whose message credits Claude, before the commit
+is signed. `core.hooksPath` in `home/gitconfig` runs it in every
+repository; `task link` puts the directory at `~/.config/git/hooks`.
+
+`core.hooksPath` hides a repository's own `.git/hooks`. The global hook
+runs the repository's `commit-msg` after its check, so that one still
+works, but the other hooks do not. A repository that needs them, with
+lefthook or pre-commit say, keeps its own in its local config:
+
+```sh
+git config core.hooksPath .git/hooks
+```
+
+That repository is then without the guard; the trailer is caught at the
+forge, or not at all.

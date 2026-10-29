@@ -5,6 +5,8 @@
   gpgSign = true
 [core]
   pager = delta
+  # Every repository runs git/hooks in the dotfiles, linked here by task link.
+  hooksPath = ~/.config/git/hooks
 [delta]
   navigate = true
   syntax-theme = ansi
