@@ -8,9 +8,62 @@
 # to it. macOS lists this script under Login Items & Extensions, Allow in the
 # Background; switched off there, the agent does not start at login.
 #
+# A fresh agent holds no keys. The Secure Enclave keys are loaded here as
+# soon as it listens, with their provider, since that needs no touch; the
+# YubiKey's key is added on its first use. The agent runs as a child so that
+# the load can happen, and a stop from launchd reaches it through the trap.
+#
 
 sock="$HOME/.ssh/agent.sock"
+enclave="$HOME/.local/bin/ssh-enclave"
+agent_pid=""
+
+#
+# Waits for the agent to answer on its socket, a few seconds at most.
+#
+function wait_for_agent()
+{
+	local tries=50
+
+	while (( tries-- )); do
+		SSH_AUTH_SOCK="$sock" ssh-add -l >/dev/null 2>&1 && return
+		(( $? == 1 )) && return      # answers, holds no keys
+		sleep 0.1
+	done
+
+	return 1
+}
+
+#
+# Loads the Secure Enclave keys into the agent, when there are any. A
+# failure is logged and is not the agent's problem.
+#
+function load_enclave_keys()
+{
+	[[ -x "$enclave" ]] || return 0
+	SSH_AUTH_SOCK="$sock" "$enclave" load ||
+		echo "ssh-agent-launchd: ssh-enclave load failed; new shells retry" >&2
+}
+
+#
+# Stops the agent when launchd stops this script.
+#
+function stop_agent()
+{
+	[[ -n "$agent_pid" ]] && kill "$agent_pid" 2>/dev/null
+}
 
 launchctl setenv SSH_AUTH_SOCK "$sock" || exit $?
 rm -f "$sock" || exit $?
-exec /opt/homebrew/bin/ssh-agent -D -a "$sock"
+
+trap stop_agent TERM INT
+/opt/homebrew/bin/ssh-agent -D -a "$sock" &
+agent_pid=$!
+
+if wait_for_agent; then
+	load_enclave_keys
+else
+	echo "ssh-agent-launchd: the agent did not answer on $sock" >&2
+fi
+
+wait "$agent_pid"

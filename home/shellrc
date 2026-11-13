@@ -20,9 +20,11 @@ if [[ "$(uname)" == "Darwin" ]]; then
     # No SSH_SK_PROVIDER: it would hide the YubiKey. Secure Enclave keys get
     # their provider per key from `ssh-enclave load` instead.
     export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-    # The agent forgets enclave keys on restart; re-adding needs no touch.
-    if command -v ssh-enclave >/dev/null &&
-        ! ssh-add -l 2>/dev/null | grep -q 'ECDSA-SK)$'; then
+    # The agent forgets enclave keys on restart, and a key added by hand
+    # without its provider sits in the agent as a FIDO key that cannot sign.
+    # Loading again repairs both: ssh-agent replaces a key it already holds,
+    # the load needs no touch, and it costs one ssh-add per shell.
+    if command -v ssh-enclave >/dev/null && [[ -S "$SSH_AUTH_SOCK" ]]; then
         ssh-enclave load 2>/dev/null
     fi
 else
