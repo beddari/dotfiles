@@ -2,6 +2,5 @@ Host *
     AddKeysToAgent yes
 
 Include ~/.lima/*/ssh.config
-Include ~/.colima/ssh_config
 Include ~/.ssh/config.d/*
 

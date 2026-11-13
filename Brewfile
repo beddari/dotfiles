@@ -3,7 +3,6 @@
 brew "age"
 brew "age-plugin-se" if OS.mac?         # age keys in the Secure Enclave
 brew "age-plugin-yubikey"
-brew "colima" if OS.mac?
 brew "coreutils" if OS.mac?             # GNU ls and dircolors, for the themes
 brew "d2" if OS.linux?
 brew "delve" if OS.linux?
@@ -21,6 +20,8 @@ brew "mtr"
 brew "openssh" if OS.mac?               # the ssh-agent; docs/ssh.md says why
 brew "openstackclient"
 brew "opentofu"
+brew "podman"                           # Ubuntu's own is 4.9; on the Mac, podman machine
+brew "podman-compose"                   # what podman compose runs
 brew "proton-pass-cli" if OS.mac?
 brew "shellcheck"                       # task lint
 brew "sops"
