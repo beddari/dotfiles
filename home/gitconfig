@@ -50,8 +50,6 @@
   name = Jan Ivar Beddari
   email = code@beddari.net
 [gpg "ssh"]
-  # Sign with the YubiKey: the first ed25519-sk key in the agent. Keys in the
-  # Secure Enclave are ecdsa-sk, so they never sign. With no such key in the
-  # agent, signing fails; ssh-add the YubiKey's key.
-  defaultKeyCommand = sh -c \"ssh-add -L | grep ^sk-ssh-ed25519@openssh.com | head -1 | sed s/^/key::/\"
+  # The key that signs is user.signingkey in ~/.gitconfig.local, one per
+  # computer. With no such key git refuses to commit; see docs/ssh.md.
   allowedSignersFile = ~/.config/git/allowed_signers
