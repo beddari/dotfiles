@@ -15,7 +15,7 @@ it here instead.
 
 | Key | For |
 |---|---|
-| `env` | Telemetry off |
+| `env` | Telemetry off, and `CLAUDE_CODE_PLUGIN_DIRS` for the footer mod |
 | `model`, `modelSettings` | The model and its effort |
 | `autoMode.environment` | What the auto mode classifier knows about Dataverket: the forge, the registry, the production cluster and the admin session |
 | `autoMode.allow` | What it allows beyond its defaults: the swamp publish checklist, reads of the production cluster, the admin tasks, and changes asked for in the conversation |
@@ -55,9 +55,11 @@ meter turns. Where the row is short, the bar goes first, then the branch is
 cut from its end, then the reset time and label, the host, the session and
 the directory's first name; the percentage stays.
 
-`task link` puts the folder at `~/.config/claude/mods/where`, and
-`home/shellrc` names it in `CLAUDE_CODE_PLUGIN_DIRS`, so every session
-loads it from there and an edit here shows in the next session. It reads
+`task link` puts the folder at `~/.config/claude/mods/where`, and the
+`env` block of `claude/settings.json` names it in `CLAUDE_CODE_PLUGIN_DIRS`.
+Claude Code reads that variable from the user settings as well as from the
+environment, so every session loads the mod, the desktop app's too, and an
+interactive one reloads it as soon as a file here is saved. It reads
 `ZMX_SESSION`, `USER` and `HOME`, and runs `uname`, `git` and `starship`;
 without starship the row has no branch or status. Claude Code writes the
 types it builds against into `.claude-plugin/types/`, which git ignores.

@@ -1,7 +1,8 @@
 {
   "env": {
     "DISABLE_TELEMETRY": "1",
-    "DO_NOT_TRACK": "1"
+    "DO_NOT_TRACK": "1",
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.config/claude/mods/where"
   },
   "model": "claude-fable-5-1[1m]",
   "workflowKeywordTriggerEnabled": false,
