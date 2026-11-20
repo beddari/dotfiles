@@ -13,6 +13,8 @@ export PATH="$HOME/.local/bin:$HOME/go/bin:/opt/homebrew/opt/coreutils/libexec/g
 export EDITOR=vim
 export LESS='-FRXx4'
 export NODE_OPTIONS="--no-deprecation"
+# Claude Code loads these mods in every session; task link puts them here.
+export CLAUDE_CODE_PLUGIN_DIRS="$HOME/.config/claude/mods/where"
 
 if [[ "$(uname)" == "Darwin" ]]; then
     # Set config folder for e.g sops

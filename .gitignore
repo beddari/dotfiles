@@ -1,3 +1,4 @@
 *.local
 *.mobileconfig
 Brewfile.lock.json
+claude/mods/*/.claude-plugin/types/

@@ -1,0 +1,35 @@
+{
+  "name": "where",
+  "version": "0.2.0",
+  "description": "The permission mode row shows the subscription meter, then where the session runs: zmx:<session>@<host>, or <user>@<host> outside zmx, the repository, branch and git status as starship shows them.",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "display": {
+      "type": "string",
+      "title": "What the meter shows",
+      "description": "rotate: one window at a time, switching every few seconds. both: the 5-hour and weekly windows side by side. session: only the 5-hour window. week: only the weekly window.",
+      "options": ["rotate", "both", "session", "week"],
+      "default": "rotate"
+    },
+    "rotateSeconds": {
+      "type": "number",
+      "title": "Seconds per window",
+      "description": "How long the meter shows each window (5-hour, weekly) before it switches to the other. Only used when display is rotate.",
+      "default": 8,
+      "min": 1
+    },
+    "hideCycleHint": {
+      "type": "boolean",
+      "title": "Hide the mode cycle hint",
+      "description": "Drop \"(shift+tab to cycle)\" after the permission mode, to leave room on the row.",
+      "default": true
+    },
+    "hideInterruptHint": {
+      "type": "boolean",
+      "title": "Hide the interrupt hint",
+      "description": "Drop \"esc to interrupt\" from the hint line while Claude works, to leave room on the row.",
+      "default": true
+    }
+  }
+}

@@ -37,6 +37,37 @@ Per-repository rules, the deterministic `permissions.allow` entries that
 skip the classifier, belong in that repository's `.claude/settings.json`,
 not here.
 
+## The footer mod
+
+`claude/mods/where` draws on the permission mode row, at the right:
+
+```
+beddari/dotfiles@main !?  zmx:test@jubilato     5h ━━━━━━──── 58% ↻ 2h 10m
+```
+
+The repository by its last two names, the branch, and the git status as
+starship shows it; then `zmx:<session>@<host>` inside a zmx session, or
+`<user>@<host>` outside one; then the subscription meter, which takes turns
+between the 5-hour and the weekly window. The meter is midudev's sub-meter
+0.4.3, merged in under its MIT licence so that one hook lays out the whole
+row. Every field has a fixed width, so the place keeps its column while the
+meter turns. Where the row is short, the bar goes first, then the branch is
+cut from its end, then the reset time and label, the host, the session and
+the directory's first name; the percentage stays.
+
+`task link` puts the folder at `~/.config/claude/mods/where`, and
+`home/shellrc` names it in `CLAUDE_CODE_PLUGIN_DIRS`, so every session
+loads it from there and an edit here shows in the next session. It reads
+`ZMX_SESSION`, `USER` and `HOME`, and runs `uname`, `git` and `starship`;
+without starship the row has no branch or status. Claude Code writes the
+types it builds against into `.claude-plugin/types/`, which git ignores.
+Check and test it with:
+
+```sh
+claude plugin validate claude/mods/where
+claude plugin test claude/mods/where
+```
+
 ## No credit in commits
 
 `attribution` is off in `claude/settings.json`, so Claude Code adds no

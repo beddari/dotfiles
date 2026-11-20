@@ -82,6 +82,7 @@ vscodium/keybindings.json $vscodium_dir/keybindings.json
 vscodium/extensions/darkerized-better-solarized $vscodium_ext/darkerized-better-solarized
 vscodium/extensions/solarized-osaka-night $vscodium_ext/solarized-osaka-night
 local/bin/theme $HOME/.local/bin/theme
+claude/mods/where $HOME/.config/claude/mods/where
 EOF
 	if [[ "$(uname -s)" == "Darwin" ]]; then
 		echo "local/bin/ssh-enclave $HOME/.local/bin/ssh-enclave"
