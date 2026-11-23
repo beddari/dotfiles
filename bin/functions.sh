@@ -14,6 +14,11 @@ vscodium_ext="$HOME/.vscode-oss/extensions"
 # On the Mac, shellrc sets XDG_CONFIG_HOME so that sops looks here too.
 sops_age_dir="${XDG_CONFIG_HOME:-$HOME/.config}/sops/age"
 
+# Where Files (Nautilus) looks for its Scripts menu on GNOME, and where Finder
+# looks for Quick Actions on macOS.
+nautilus_scripts="$HOME/.local/share/nautilus/scripts"
+services_dir="$HOME/Library/Services"
+
 # The keyring the brave-keyring package ships, and apt/ holds a copy of.
 brave_keyring="brave-browser-archive-keyring.gpg"
 
@@ -82,11 +87,14 @@ vscodium/keybindings.json $vscodium_dir/keybindings.json
 vscodium/extensions/darkerized-better-solarized $vscodium_ext/darkerized-better-solarized
 vscodium/extensions/solarized-osaka-night $vscodium_ext/solarized-osaka-night
 local/bin/theme $HOME/.local/bin/theme
+local/bin/svg2png $HOME/.local/bin/svg2png
 claude/mods/where $HOME/.config/claude/mods/where
 EOF
 	if [[ "$(uname -s)" == "Darwin" ]]; then
 		echo "local/bin/ssh-enclave $HOME/.local/bin/ssh-enclave"
 		echo "local/bin/ssh-agent-launchd $HOME/.local/bin/ssh-agent-launchd"
+	else
+		echo "gnome/nautilus-scripts/svg2png $nautilus_scripts/Convert SVG to PNG"
 	fi
 }
 

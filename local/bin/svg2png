@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+#
+# Renders svg files to png with Inkscape, the longest side 1024 pixels unless
+# told otherwise. The png is written next to the svg, with the same name:
+#
+#   svg2png logo.svg
+#   svg2png --size 512 --out ~/Desktop *.svg
+#
+# It is linked into ~/.local/bin, so it runs from anywhere. The Quick Action
+# in macos/ calls it from Finder, whose own "Convert Image" cannot read svg,
+# and the script in gnome/nautilus-scripts/ from the Scripts menu of Files.
+#
+
+self="$0"
+[[ -L "$self" ]] && self="$(readlink "$self")"
+source "${self%/*}/../../bin/functions.sh" || exit $?
+
+size=1024
+out_dir=""
+argv=()
+
+#
+# Prints the usage.
+#
+function usage()
+{
+	cat <<USAGE
+usage: svg2png [--size N] [--out DIR] FILE.svg ...
+
+  --size N    Longest side of the png, in pixels. Default 1024.
+  --out DIR   Write the png files here, not next to the svg files.
+
+  svg2png logo.svg
+  svg2png --size 512 --out ~/Desktop *.svg
+USAGE
+}
+
+#
+# Parses the command line options.
+#
+function parse_options()
+{
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			--size)	size="$2"; shift 2 ;;
+			--out)	out_dir="$2"; shift 2 ;;
+			-h|--help)	usage; exit ;;
+			--)	shift; argv+=("$@"); break ;;
+			-*)	echo "svg2png: unrecognized option $1" >&2; return 1 ;;
+			*)	argv+=("$1"); shift ;;
+		esac
+	done
+
+	case "${#argv[*]}" in
+		0)	usage >&2; return 1 ;;
+	esac
+	[[ "$size" =~ ^[1-9][0-9]*$ ]] ||
+		{ echo "svg2png: --size must be a number: $size" >&2; return 1; }
+}
+
+#
+# Finds Inkscape: on PATH, or where the Homebrew cask and the app put it, for
+# the Quick Action, which runs without the shell's PATH.
+#
+function find_inkscape()
+{
+	if   command -v inkscape >/dev/null; then inkscape="inkscape"
+	elif [[ -x /opt/homebrew/bin/inkscape ]]; then
+		inkscape="/opt/homebrew/bin/inkscape"
+	elif [[ -x /Applications/Inkscape.app/Contents/MacOS/inkscape ]]; then
+		inkscape="/Applications/Inkscape.app/Contents/MacOS/inkscape"
+	elif [[ "$(uname -s)" == "Darwin" ]]; then
+		error "Inkscape is not installed. Run: task brew"
+		return 1
+	else
+		error "Inkscape is not installed. Run: sudo apt install inkscape"
+		return 1
+	fi
+}
+
+#
+# Prints the width and height of a png, read from its IHDR chunk.
+#
+function png_size()
+{
+	local png="$1"
+	local hex
+
+	hex="$(od -An -tx1 -j16 -N8 "$png" | tr -d ' \n')" || return $?
+	echo "$((16#${hex:0:8})) $((16#${hex:8:8}))"
+}
+
+#
+# Renders one svg to a png with its longest side $size pixels. Inkscape scales
+# the page to a given width; when that makes the png taller than wide, it is
+# rendered again to the given height. Inkscape's size queries report the
+# drawing, not the page, so the first render decides.
+#
+function render()
+{
+	local svg="$1"
+	local name="${svg##*/}" png width height
+
+	png="${out_dir:-${svg%/*}}/${name%.*}.png"
+	[[ "$svg" == */* ]] || png="${out_dir:-.}/${name%.*}.png"
+
+	"$inkscape" --export-type=png --export-width="$size" \
+		--export-filename="$png" "$svg" 2>/dev/null || return $?
+	read -r width height < <(png_size "$png") || return $?
+
+	if (( height > width )); then
+		"$inkscape" --export-type=png --export-height="$size" \
+			--export-filename="$png" "$svg" 2>/dev/null || return $?
+		read -r width height < <(png_size "$png") || return $?
+	fi
+	log "$png ${width}x${height}"
+}
+
+#
+# Renders every svg given. One that fails does not stop the rest.
+#
+function render_all()
+{
+	local svg status=0
+
+	for svg in "${argv[@]}"; do
+		if [[ ! -f "$svg" ]]; then
+			error "$svg: no such file"
+			status=1
+		elif ! render "$svg"; then
+			error "$svg: Inkscape could not render it"
+			status=1
+		fi
+	done
+	return "$status"
+}
+
+parse_options "$@" || exit $?
+find_inkscape || exit $?
+[[ -z "$out_dir" ]] || mkdir -p "$out_dir" || fail "Making $out_dir failed!"
+
+render_all || fail "Not every file was converted!"

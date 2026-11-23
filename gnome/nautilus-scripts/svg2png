@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# The "Convert SVG to PNG" entry in the Scripts menu of Files (Nautilus) on
+# GNOME. It is linked into ~/.local/share/nautilus/scripts under that name,
+# and Files passes the selected files as arguments.
+#
+
+self="$0"
+[[ -L "$self" ]] && self="$(readlink "$self")"
+svg2png="${self%/*}/../../local/bin/svg2png"
+
+if output="$("$svg2png" "$@" 2>&1)"; then
+	notify-send "Convert SVG to PNG" \
+		"$# svg converted, the png is next to it" 2>/dev/null
+else
+	notify-send --urgency=critical "Convert SVG to PNG failed" \
+		"$output" 2>/dev/null
+	exit 1
+fi

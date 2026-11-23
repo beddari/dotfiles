@@ -15,6 +15,8 @@ workstation. [Homebrew](https://brew.sh) installs the tools,
   configured.
 - Claude Code's settings, with the auto mode rules for Dataverket's
   infrastructure, merged into place.
+- `svg2png`: svg files rendered to png by Inkscape, the longest side 1024.
+  Right-click an svg in Finder, or in Files on GNOME.
 - Mac: Homebrew's `ssh-agent` for shells and apps, ssh keys in the Secure
   Enclave, Touch ID for `sudo`.
 - Brave on the Mac without Rewards, Wallet, VPN, AI chat, News or password
@@ -47,7 +49,7 @@ them.
 | Task | Result |
 |---|---|
 | `task brew` | Packages in `Brewfile` installed |
-| `task link` | Links in place, theme applied; safe to rerun |
+| `task link` | Links in place, theme applied, Quick Actions installed; safe to rerun |
 | `task status` | Links, theme, packages, ssh-agent, GNOME settings, apt repos |
 | `task theme -- <name>` | Every tool switched to the theme |
 | `task theme-preview` | Prompt and `ls` shown in every theme |
@@ -78,7 +80,7 @@ them.
 Taskfile.yml   tasks; each calls a script in bin/
 Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
-local/bin/     theme, ssh-enclave, ssh-agent-launchd
+local/bin/     theme, svg2png, ssh-enclave, ssh-agent-launchd
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
 git/hooks/     commit-msg, run in every repository through core.hooksPath
 vim/ ghostty/ vscodium/ claude/ themes/ brave/ macos/ gnome/ apt/ yubikey/    tool configs
@@ -92,4 +94,4 @@ docs/          the docs below
 | [docs/themes.md](docs/themes.md) | Themes |
 | [docs/vscodium.md](docs/vscodium.md) | VSCodium |
 | [docs/claude.md](docs/claude.md) | Claude Code: the settings, the auto mode rules, and the commit hook |
-| [docs/system.md](docs/system.md) | apt repos, Touch ID, YubiKey, root prompt, Brave policy, GNOME |
+| [docs/system.md](docs/system.md) | apt repos, Touch ID, YubiKey, root prompt, Brave policy, GNOME, svg2png |

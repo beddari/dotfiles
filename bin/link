@@ -2,8 +2,9 @@
 #
 # Links the dotfiles into the home directory, merges the VSCodium and Claude
 # Code settings, and applies the theme in use, or solarized-osaka-dark on the
-# first run. On macOS it also sets a few defaults and installs the ssh-agent
-# LaunchAgent.
+# first run. On macOS it also sets a few defaults, installs the ssh-agent
+# LaunchAgent and the Quick Actions in macos/. On GNOME the Scripts menu of
+# Files gets gnome/nautilus-scripts through the links.
 #
 # It can run again: a link is replaced by one to this repository, and a link
 # to a file that this repository no longer has is removed.
@@ -141,6 +142,31 @@ function install_ssh_agent()
 	launchctl bootstrap "gui/$(id -u)" "$agent_plist" || return $?
 }
 
+#
+# Installs the Quick Actions in macos/, the .workflow bundles, into Finder's
+# right-click menu. Finder wants a real bundle there, not a link, so each is
+# copied, and only when it differs from the one installed.
+#
+function install_quick_actions()
+{
+	local bundle dest changed=0
+
+	for bundle in "$root"/macos/*.workflow; do
+		dest="$services_dir/${bundle##*/}"
+		diff -r -q "$bundle" "$dest" >/dev/null 2>&1 && continue
+		log "Installing the Quick Action ${bundle##*/} ..."
+		mkdir -p "$services_dir" || return $?
+		rm -rf "$dest" || return $?
+		cp -R "$bundle" "$dest" || return $?
+		changed=1
+	done
+
+	# Finder reads the Services folder when pbs, the services server, tells
+	# it to; a new bundle shows up in the menu without logging out.
+	(( changed )) && /System/Library/CoreServices/pbs -update 2>/dev/null
+	return 0
+}
+
 # Read before prune_links, which removes the link when its file has moved.
 theme="$(current_theme)"
 
@@ -157,6 +183,7 @@ merge_claude_settings   || fail "Merging the Claude Code settings failed!"
 	fail "Applying the theme failed!"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-	set_macos_defaults || fail "Setting the macOS defaults failed!"
-	install_ssh_agent  || fail "Starting the ssh-agent LaunchAgent failed!"
+	set_macos_defaults    || fail "Setting the macOS defaults failed!"
+	install_ssh_agent     || fail "Starting the ssh-agent LaunchAgent failed!"
+	install_quick_actions || fail "Installing the Quick Actions failed!"
 fi

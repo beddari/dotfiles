@@ -108,3 +108,23 @@ Today it holds one: Space is a plain space at every modifier level
 (`nbsp:none`). The Norwegian layout otherwise puts a no-break space on
 AltGr+Space, invisible and breaking commands and code; the other `nbsp`
 variants put a zero-width joiner or non-joiner there instead.
+
+## svg to png
+
+Finder's "Convert Image" cannot read svg, and ImageMagick renders svg with
+its own engine, which gets text and gradients wrong. `svg2png` renders with
+Inkscape, the longest side 1024 pixels unless told otherwise, and writes the
+png next to the svg with the same name, replacing one that is there:
+
+```sh
+svg2png logo.svg
+svg2png --size 512 --out ~/Desktop *.svg
+```
+
+It is linked into `~/.local/bin`. On the Mac, `task link` also copies the
+Quick Action in `macos/` into `~/Library/Services`, so an svg in Finder has
+"Convert SVG to PNG" under Quick Actions in its right-click menu; Inkscape
+comes from the Brewfile. On GNOME, the link into
+`~/.local/share/nautilus/scripts` puts the same entry in the Scripts menu of
+Files, and Inkscape comes from `sudo apt install inkscape`. Both send a
+notification when done.
