@@ -75,6 +75,7 @@ function links()
 {
 	cat <<EOF
 home/zshrc $HOME/.zshrc
+home/zshenv $HOME/.zshenv
 home/bashrc $HOME/.bashrc
 home/gitconfig $HOME/.gitconfig
 git/hooks $HOME/.config/git/hooks

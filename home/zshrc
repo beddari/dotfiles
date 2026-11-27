@@ -1,3 +1,4 @@
+source "${${(%):-%x}:A:h}/shellenv"
 source "${${(%):-%x}:A:h}/shellrc"
 
 # Remap non-breaking space (Option+Space on Norwegian keyboard) to regular space

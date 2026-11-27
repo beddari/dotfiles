@@ -1,0 +1,4 @@
+# Read by every zsh, also the one that runs a command for ssh, which reads
+# no zshrc.
+typeset -U path PATH
+source "${${(%):-%x}:A:h}/shellenv"
