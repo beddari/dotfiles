@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+#
+# Runs a second ssh-agent on ~/.ssh/sign-agent.sock that holds only the keys
+# this computer lends: the one it signs git commits with, user.signingkey,
+# unless others are chosen with lend and drop. It is the agent a
+# RemoteForward hands to the one host that may ask this computer for
+# signatures; the agent that shells and apps use is never forwarded.
+#
+# ssh starts it from a Match exec in ~/.ssh/config.d, which setup writes, so
+# it answers on the first connection after a login. A key signs only on
+# Touch ID, or on a touch of the YubiKey. Usage: docs/ssh.md.
+#
+
+sock="$HOME/.ssh/sign-agent.sock"
+config_dir="$HOME/.ssh/config.d"
+enclave_provider="/usr/lib/ssh-keychain.dylib"
+
+#
+# Prints the usage.
+#
+function usage()
+{
+	cat <<USAGE
+usage: ssh-sign-agent [command]
+
+  start          start the agent unless it answers, and lend user.signingkey
+                 when it holds no key; the default
+  lend <name>    lend the keys ~/.ssh/id_*<name>* too: yubikey, enclave
+  drop <name>    stop lending them
+  list           the keys that are lent, the first being the one a host
+                 signs with unless it asks for another
+  stop           stop the agent
+  setup <host>   let a host sign with the keys lent: forward the agent to
+                 it, and to no other, and make git there use it
+USAGE
+}
+
+#
+# Prints an error message and exits.
+#
+function fail()
+{
+	echo "ssh-sign-agent: $1" >&2
+	exit 1
+}
+
+#
+# Prints the ssh-agent to run. On a Mac it is Homebrew's: Apple's cannot use
+# a YubiKey, and ssh runs this script without Homebrew in PATH.
+#
+function agent_program()
+{
+	if [[ -x /opt/homebrew/bin/ssh-agent ]]; then
+		echo /opt/homebrew/bin/ssh-agent
+	else
+		command -v ssh-agent
+	fi
+}
+
+#
+# Runs ssh-add against the agent, from beside the agent it belongs to.
+#
+function agent_add()
+{
+	local agent ssh_add
+
+	agent="$(agent_program)" || return $?
+	ssh_add="${agent%/*}/ssh-add"
+	SSH_AUTH_SOCK="$sock" "$ssh_add" "$@"
+}
+
+#
+# Succeeds when the agent answers on its socket, with or without keys.
+#
+function answers()
+{
+	agent_add -l >/dev/null 2>&1
+	(( $? < 2 ))
+}
+
+#
+# Starts the agent. One that died leaves its socket behind, and a new one
+# cannot bind to it.
+#
+function start_agent()
+{
+	local agent
+
+	agent="$(agent_program)" || return $?
+	rm -f "$sock" || return $?
+	"$agent" -a "$sock" >/dev/null || return $?
+}
+
+#
+# Prints the key this computer signs git commits with, without key:: and
+# without a comment.
+#
+function signing_key()
+{
+	local key type blob
+
+	key="$(git config --global --includes user.signingkey)" || return $?
+	read -r type blob _ <<< "${key#key::}"
+	[[ -n "$blob" ]] || return 1
+	echo "$type $blob"
+}
+
+#
+# Prints the stub in ~/.ssh of the signing key, found by its public key.
+#
+function signing_stub()
+{
+	local key pub
+
+	key="$(signing_key)" || return $?
+	for pub in "$HOME"/.ssh/*.pub; do
+		[[ -f "${pub%.pub}" ]] || continue
+		if [[ "$(cut -d' ' -f1,2 "$pub")" == "$key" ]]; then
+			echo "${pub%.pub}"
+			return
+		fi
+	done
+
+	return 1
+}
+
+#
+# Prints the stubs in ~/.ssh with a name in their file name, as in
+# id_yubikey_<serial> and id_enclave_<label>.
+#
+function named_stubs()
+{
+	local name="$1"
+	local pub found=1
+
+	for pub in "$HOME"/.ssh/id_*"$name"*.pub; do
+		[[ -f "${pub%.pub}" ]] || continue
+		echo "${pub%.pub}"
+		found=0
+	done
+
+	return "$found"
+}
+
+#
+# Adds a stub to the agent unless its key is there. A Secure Enclave key
+# goes in with its provider and needs no touch; a YubiKey stub with a
+# passphrase asks for it on the terminal, and fails with no terminal.
+#
+function add_stub()
+{
+	local stub="$1"
+
+	if [[ "$(agent_add -L 2>/dev/null)" == *"$(cut -d' ' -f2 "$stub.pub")"* ]]; then
+		return
+	fi
+
+	case "${stub##*/}" in
+		id_enclave_*)	agent_add -q -S "$enclave_provider" "$stub" ;;
+		*)		agent_add -q "$stub" ;;
+	esac
+}
+
+#
+# Starts the agent unless it answers. An agent with no key gets the signing
+# key; one that holds a key is left as lend and drop made it.
+#
+function cmd_start()
+{
+	local stub
+
+	if ! answers; then
+		start_agent || return $?
+	fi
+	agent_add -l >/dev/null 2>&1 && return
+
+	stub="$(signing_stub)" ||
+		fail "no stub in ~/.ssh for user.signingkey"
+	add_stub "$stub"
+}
+
+#
+# Lends the keys with a name, after those that are lent already.
+#
+function cmd_lend()
+{
+	local name="${1:-}"
+	local stub stubs
+
+	[[ -n "$name" ]] || fail "usage: ssh-sign-agent lend <name>"
+	stubs="$(named_stubs "$name")" || fail "no ~/.ssh/id_*$name* stub"
+	answers || start_agent || return $?
+
+	while read -r stub; do
+		add_stub "$stub" || return $?
+	done <<< "$stubs"
+}
+
+#
+# Stops lending the keys with a name.
+#
+function cmd_drop()
+{
+	local name="${1:-}"
+	local stub stubs
+
+	[[ -n "$name" ]] || fail "usage: ssh-sign-agent drop <name>"
+	stubs="$(named_stubs "$name")" || fail "no ~/.ssh/id_*$name* stub"
+	answers || return 0
+
+	while read -r stub; do
+		agent_add -q -d "$stub.pub" 2>/dev/null
+	done <<< "$stubs"
+	return 0
+}
+
+#
+# Prints the keys in the agent.
+#
+function cmd_list()
+{
+	answers || fail "the agent is not running. Run: ssh-sign-agent"
+	agent_add -l
+}
+
+#
+# Stops the agent and removes its socket.
+#
+function cmd_stop()
+{
+	answers || return 0
+	pkill -u "$(id -u)" -f "ssh-agent -a $sock" || return $?
+	rm -f "$sock"
+}
+
+#
+# Prints the script that sets up the host, for its bash. It makes git sign
+# through ssh-sign-forwarded and verify the key in $key, and prints the home
+# directory there as its last line. Git does not expand ~ in gpg.ssh.program.
+#
+function host_script()
+{
+	cat <<'SCRIPT'
+program="$HOME/.local/bin/ssh-sign-forwarded"
+signers="$HOME/.config/git/allowed_signers"
+
+if [[ ! -x "$program" ]]; then
+	echo "ssh-sign-agent: no $program on $(hostname); link the dotfiles there" >&2
+	exit 1
+fi
+
+git config --file "$HOME/.gitconfig.local" gpg.ssh.program "$program" || exit $?
+mkdir -p "${signers%/*}" || exit $?
+if ! grep -qsF "$key" "$signers"; then
+	echo "$(git config user.email) namespaces=\"git\" $key" >> "$signers" ||
+		exit 1
+fi
+
+if ! grep -qsiE '^[[:space:]]*StreamLocalBindUnlink[[:space:]]+yes' \
+	/etc/ssh/sshd_config /etc/ssh/sshd_config.d/*; then
+	echo "ssh-sign-agent: set StreamLocalBindUnlink yes in the sshd_config" \
+		"of $(hostname), or a closed connection blocks the next forward" >&2
+fi
+
+echo "$HOME"
+SCRIPT
+}
+
+#
+# Lets a host sign with the keys lent. On the host, git gets
+# ssh-sign-forwarded and this computer's signing key as an allowed signer.
+# Here, ~/.ssh/config.d/sign-agent-<host> forwards the agent to that host.
+# The host is matched by the name given and by the HostName ssh makes of it,
+# as either may be the one ssh has when it reads the file.
+#
+function cmd_setup()
+{
+	local host="${1:-}"
+	local key hostname home file
+
+	case "$host" in
+		""|-*|*[!A-Za-z0-9._-]*) fail "usage: ssh-sign-agent setup <host>" ;;
+	esac
+	key="$(signing_key)" || fail "no user.signingkey in the git config"
+	hostname="$(ssh -G "$host" | awk '$1 == "hostname" { print $2 }')"
+	[[ -n "$hostname" ]] || fail "ssh does not know the host '$host'"
+
+	home="$({ printf 'key=%q\n' "$key"; host_script; } |
+		ssh -T "$host" bash -s)" || fail "setting up $host failed"
+	home="${home##*$'\n'}"
+	[[ "$home" == /* ]] || fail "$host did not say where its home is"
+
+	file="$config_dir/sign-agent-$host"
+	mkdir -p "$config_dir" && chmod 700 "$config_dir" || return $?
+	cat > "$file" <<CONFIG || return 1
+# Written by ssh-sign-agent setup. $host may ask this computer to sign with
+# the keys in ssh-sign-agent list; remove the file to end that.
+Match host $host,$hostname exec "~/.local/bin/ssh-sign-agent"
+    RemoteForward $home/.ssh/sign-forwarded.sock %d/.ssh/sign-agent.sock
+CONFIG
+	chmod 600 "$file" || return $?
+	echo "$file"
+}
+
+cmd="${1:-start}"
+case "$cmd" in
+	start)		cmd_start ;;
+	lend)		cmd_lend "${2:-}" ;;
+	drop)		cmd_drop "${2:-}" ;;
+	list)		cmd_list ;;
+	stop)		cmd_stop ;;
+	setup)		cmd_setup "${2:-}" ;;
+	-h|--help|help)	usage ;;
+	*)		usage >&2; exit 1 ;;
+esac

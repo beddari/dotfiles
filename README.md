@@ -80,7 +80,8 @@ them.
 Taskfile.yml   tasks; each calls a script in bin/
 Brewfile       packages for both computers
 bin/           task scripts; functions.sh lists every link
-local/bin/     theme, svg2png, ssh-enclave, ssh-agent-launchd
+local/bin/     theme, svg2png, ssh-enclave, ssh-agent-launchd, ssh-sign-agent,
+               ssh-sign-forwarded
 home/          zshrc, bashrc, shellrc (shared by both), gitconfig, ssh_config
 git/hooks/     commit-msg, run in every repository through core.hooksPath
 vim/ ghostty/ vscodium/ claude/ themes/ brave/ macos/ gnome/ apt/ yubikey/    tool configs

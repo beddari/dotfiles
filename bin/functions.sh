@@ -88,6 +88,8 @@ vscodium/extensions/darkerized-better-solarized $vscodium_ext/darkerized-better-
 vscodium/extensions/solarized-osaka-night $vscodium_ext/solarized-osaka-night
 local/bin/theme $HOME/.local/bin/theme
 local/bin/svg2png $HOME/.local/bin/svg2png
+local/bin/ssh-sign-agent $HOME/.local/bin/ssh-sign-agent
+local/bin/ssh-sign-forwarded $HOME/.local/bin/ssh-sign-forwarded
 claude/mods/where $HOME/.config/claude/mods/where
 EOF
 	if [[ "$(uname -s)" == "Darwin" ]]; then

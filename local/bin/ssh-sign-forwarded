@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+#
+# Signs for git with the key of the computer you are logged in from. It is
+# gpg.ssh.program on the computer that is logged in to: git runs it as it
+# would run ssh-keygen.
+#
+# The other computer forwards its ssh-sign-agent to ~/.ssh/sign-forwarded.sock
+# here, with a RemoteForward for this host alone; ssh-sign-agent setup, run
+# there, arranges both ends. A signature is asked of that agent, in place of
+# user.signingkey, when the socket answers and git runs in an ssh session, or
+# no YubiKey is attached here. In every other case this is ssh-keygen: at the
+# desk the YubiKey signs, as without this script.
+#
+# The agent may lend several keys. The first one signs, unless SSH_SIGN_KEY
+# names another by a word in its comment or its type:
+#
+#   SSH_SIGN_KEY=yubikey git commit
+#
+# Only this script looks at the socket; SSH_AUTH_SOCK is left alone, so ssh
+# from here never uses a forwarded key. Usage: docs/ssh.md.
+#
+
+sock="$HOME/.ssh/sign-forwarded.sock"
+
+#
+# Succeeds when a YubiKey is attached to this computer. Linux lists USB
+# devices in /sys, where 1050 is Yubico's vendor id; macOS has ioreg.
+#
+function yubikey_attached()
+{
+	if [[ -d /sys/bus/usb/devices ]]; then
+		grep -qsx 1050 /sys/bus/usb/devices/*/idVendor
+	else
+		ioreg -p IOUSB 2>/dev/null | grep -q YubiKey
+	fi
+}
+
+#
+# Prints the key in the forwarded agent that signs: the first one, or the
+# first that SSH_SIGN_KEY names. Fails when the agent does not answer or
+# holds no such key.
+#
+function forwarded_key()
+{
+	local want="${SSH_SIGN_KEY:-}"
+	local keys key
+
+	[[ -S "$sock" ]] || return 1
+	keys="$(SSH_AUTH_SOCK="$sock" ssh-add -L 2>/dev/null)" || return $?
+
+	while read -r key; do
+		if [[ -z "$want" || "$key" == *"$want"* ]]; then
+			echo "$key"
+			return
+		fi
+	done <<< "$keys"
+
+	echo "ssh-sign-forwarded: no forwarded key matches '$want'" >&2
+	return 1
+}
+
+#
+# Runs ssh-keygen -Y sign against the forwarded agent, with its key in place
+# of the one git names with -f.
+#
+function sign_forwarded()
+{
+	local key="$1"
+	shift
+	local file status args=()
+
+	file="$(mktemp)" || return $?
+	echo "$key" > "$file" || return 1
+
+	while (( $# > 0 )); do
+		case "$1" in
+			-f)	args+=(-f "$file"); shift 2 ;;
+			-U)	shift ;;
+			*)	args+=("$1"); shift ;;
+		esac
+	done
+
+	# -U takes the key in the file as a public key, to be found in the agent.
+	SSH_AUTH_SOCK="$sock" ssh-keygen -U "${args[@]}"
+	status=$?
+	rm -f "$file"
+	return "$status"
+}
+
+if [[ "$1" == "-Y" && "$2" == "sign" ]]; then
+	if [[ -n "$SSH_CONNECTION" ]] || ! yubikey_attached; then
+		if key="$(forwarded_key)"; then
+			sign_forwarded "$key" "$@"
+			exit $?
+		elif [[ -n "${SSH_SIGN_KEY:-}" ]]; then
+			exit 1
+		fi
+	fi
+fi
+
+exec ssh-keygen "$@"
