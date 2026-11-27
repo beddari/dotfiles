@@ -99,6 +99,10 @@ select_theme "$name" || { usage >&2; exit 1; }
 
 mkdir -p "$HOME/.config/ghostty" "$HOME/.vim" || fail "mkdir failed!"
 
+# task link applies the theme in use again; that is not a switch, and it
+# is not reported.
+previous="$(readlink "$HOME/.config/delta-theme.gitconfig" 2>/dev/null)"
+
 ln -sfn "$root/themes/delta-$name.gitconfig" \
 	"$HOME/.config/delta-theme.gitconfig" || fail "Linking delta failed!"
 ln -sfn "$root/themes/dircolors.$variant" "$HOME/.dircolors" ||
@@ -110,4 +114,6 @@ echo "theme = $ghostty_theme" > "$HOME/.config/ghostty/theme.local" ||
 set_vscodium_theme || fail "Setting the VSCodium theme failed!"
 
 killall -USR2 ghostty 2>/dev/null
-log "Switched to $name"
+[[ "$previous" == "$root/themes/delta-$name.gitconfig" ]] ||
+	log "Switched to $name"
+exit 0
